@@ -453,7 +453,7 @@ class YOLOXTrainer:
                 self.wrapper_model.model = original_model
 
             # Debug: print what we got back
-            print(f"[DEBUG] Validation results keys: {list(results.keys())}")
+            logger.debug(f"Validation results keys: {list(results.keys())}")
 
             # Extract metrics - results has keys like 'metrics/mAP50' and 'metrics/mAP50-95'
             metrics = {
@@ -461,7 +461,7 @@ class YOLOXTrainer:
                 'mAP50_95': results.get('metrics/mAP50-95', 0.0),
             }
 
-            print(f"[DEBUG] Extracted metrics: mAP50={metrics['mAP50']:.4f}, mAP50_95={metrics['mAP50_95']:.4f}")
+            logger.debug(f"Extracted metrics: mAP50={metrics['mAP50']:.4f}, mAP50_95={metrics['mAP50_95']:.4f}")
 
             # Log to user (using print since logger may not show)
             print(f"Validation - mAP50: {metrics['mAP50']:.4f}, mAP50-95: {metrics['mAP50_95']:.4f}")
@@ -602,7 +602,13 @@ class YOLOXTrainer:
             "best_mAP50_95": self.best_mAP50_95,
             "best_mAP50": self.best_mAP50,
             "best_epoch": self.best_epoch,
+            # Model metadata for loading fine-tuned models in new sessions
+            "nc": self.config.num_classes,
+            "size": self.config.size,
+            "model_family": "yolox",
         }
+        if self.wrapper_model is not None:
+            checkpoint["names"] = self.wrapper_model.names
 
         # Save EMA state if available
         if self.ema_model is not None:
@@ -617,7 +623,7 @@ class YOLOXTrainer:
         torch.save(checkpoint, latest_path)
 
         # Save best checkpoint based on mAP (if validation metrics available)
-        print(f"[DEBUG] _save_checkpoint: val_metrics={val_metrics}, best_mAP50_95={self.best_mAP50_95}")
+        logger.debug(f"_save_checkpoint: val_metrics={val_metrics}, best_mAP50_95={self.best_mAP50_95}")
         if val_metrics and val_metrics['mAP50_95'] > self.best_mAP50_95:
             self.best_mAP50_95 = val_metrics['mAP50_95']
             self.best_mAP50 = val_metrics['mAP50']

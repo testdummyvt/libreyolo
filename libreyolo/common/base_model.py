@@ -5,6 +5,7 @@ Provides shared functionality for all YOLO model variants.
 """
 
 import json
+import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
@@ -225,12 +226,46 @@ class LibreYOLOBase(ABC):
         """
         return True
 
+    @staticmethod
+    def _strip_ddp_prefix(state_dict: dict) -> dict:
+        """Strip 'module.' prefix from DDP-wrapped state_dict keys."""
+        if any(k.startswith("module.") for k in state_dict):
+            return {k.removeprefix("module."): v for k, v in state_dict.items()}
+        return state_dict
+
+    @staticmethod
+    def _sanitize_names(names: dict, nc: int) -> Dict[int, str]:
+        """Sanitize a class names dict: ensure int keys, fill gaps, trim to nc."""
+        sanitized = {}
+        for k, v in names.items():
+            try:
+                sanitized[int(k)] = str(v)
+            except (ValueError, TypeError):
+                continue
+
+        result = {}
+        for i in range(nc):
+            result[i] = sanitized.get(i, f"class_{i}")
+        return result
+
     def _load_weights(self, model_path: str):
         """Load model weights from file.
 
         Handles both raw state_dicts and training checkpoint dicts
         ({"model": state_dict, "optimizer": ..., "epoch": ...}).
+
+        If the checkpoint contains model metadata (nc, names, size),
+        auto-rebuilds the model architecture to match before loading weights.
+        This enables loading fine-tuned checkpoints trained on different
+        numbers of classes.
+
+        Also handles:
+        - DDP 'module.' prefix stripping
+        - Cross-family checkpoint warnings
+        - Names dict sanitization (string keys, gaps, nc mismatch)
         """
+        logger = logging.getLogger(__name__)
+
         if not Path(model_path).exists():
             raise FileNotFoundError(f"Model weights file not found: {model_path}")
 
@@ -244,6 +279,33 @@ class LibreYOLOBase(ABC):
                     state_dict = loaded["state_dict"]
                 else:
                     state_dict = loaded
+
+                # Strip DDP 'module.' prefix if present
+                state_dict = self._strip_ddp_prefix(state_dict)
+
+                # Reject cross-family loading
+                ckpt_family = loaded.get("model_family")
+                if ckpt_family is not None:
+                    own_family = self._get_model_name().lower()
+                    family_map = {"libreyolo9": "v9", "libreyolox": "yolox", "libreyolorfdetr": "rfdetr"}
+                    own_family_norm = family_map.get(own_family, own_family)
+                    if ckpt_family != own_family_norm:
+                        raise RuntimeError(
+                            f"Checkpoint was trained with model_family='{ckpt_family}' "
+                            f"but is being loaded into '{own_family_norm}'. "
+                            f"Use the correct model class for this checkpoint."
+                        )
+
+                # Auto-rebuild model if checkpoint has different nc
+                ckpt_nc = loaded.get("nc")
+                if ckpt_nc is not None and ckpt_nc != self.nb_classes:
+                    self._rebuild_for_new_classes(ckpt_nc)
+
+                # Restore and sanitize class names from checkpoint
+                ckpt_names = loaded.get("names")
+                effective_nc = ckpt_nc if ckpt_nc is not None else self.nb_classes
+                if ckpt_names is not None:
+                    self.names = self._sanitize_names(ckpt_names, effective_nc)
             else:
                 state_dict = loaded
 

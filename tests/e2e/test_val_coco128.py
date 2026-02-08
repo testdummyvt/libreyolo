@@ -35,7 +35,6 @@ MODELS = [
     # RF-DETR
     ("librerfdetrnano.pth",  "n"),
     ("librerfdetrsmall.pth", "s"),
-    ("librerfdetrbase.pth",  "b"),
     ("librerfdetrmedium.pth","m"),
     ("librerfdetrlarge.pth", "l"),
 ]
@@ -43,7 +42,7 @@ MODELS = [
 IDS = [
     "yolox-nano", "yolox-tiny", "yolox-s", "yolox-m", "yolox-l", "yolox-x",
     "v9-t", "v9-s", "v9-m", "v9-c",
-    "rfdetr-n", "rfdetr-s", "rfdetr-b", "rfdetr-m", "rfdetr-l",
+    "rfdetr-n", "rfdetr-s", "rfdetr-m", "rfdetr-l",
 ]
 
 

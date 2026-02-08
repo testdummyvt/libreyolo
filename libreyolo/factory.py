@@ -481,6 +481,19 @@ def LIBREYOLO(
         if nb_classes is None:
             nb_classes = 80
 
+    # For checkpoints with LibreYOLO metadata (from our trainers), pass the
+    # file path so _load_weights() handles nc auto-rebuild and names restoration.
+    # The model is built with default nc=80, then _load_weights() detects the
+    # checkpoint's nc and rebuilds the head properly (preserving intermediate channels).
+    # For old/pretrained checkpoints without metadata, pass the extracted state_dict.
+    has_metadata = isinstance(state_dict, dict) and "nc" in state_dict
+    if has_metadata:
+        load_arg = model_path
+        load_nc = 80  # Build with default, let _load_weights() rebuild
+    else:
+        load_arg = weights_dict
+        load_nc = nb_classes
+
     if is_rfdetr:
         # RF-DETR detected - use LIBREYOLORFDETR (lazy import)
         # RF-DETR needs the path string, not the loaded weights dict
@@ -499,14 +512,14 @@ def LIBREYOLO(
     elif is_yolox:
         # YOLOX detected - use LIBREYOLOX
         model = LIBREYOLOX(
-            model_path=weights_dict, size=size, nb_classes=nb_classes, device=device
+            model_path=load_arg, size=size, nb_classes=load_nc, device=device
         )
         model.version = "x"
         model.model_path = model_path
     elif is_yolo9:
         # YOLOv9 detected - use LIBREYOLO9
         model = LIBREYOLO9(
-            model_path=weights_dict, size=size, reg_max=reg_max, nb_classes=nb_classes,
+            model_path=load_arg, size=size, reg_max=reg_max, nb_classes=load_nc,
             device=device
         )
         model.version = "9"

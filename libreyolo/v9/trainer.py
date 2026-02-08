@@ -655,7 +655,13 @@ class V9Trainer:
             "best_mAP50_95": self.best_mAP50_95,
             "best_mAP50": self.best_mAP50,
             "best_epoch": self.best_epoch,
+            # Model metadata for loading fine-tuned models in new sessions
+            "nc": self.config.num_classes,
+            "size": self.config.size,
+            "model_family": "v9",
         }
+        if self.wrapper_model is not None:
+            checkpoint["names"] = self.wrapper_model.names
 
         # Save EMA state if available
         if self.ema_model is not None:

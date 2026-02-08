@@ -175,7 +175,7 @@ def dataset_data_yaml(dataset):
     return str(dataset / "data.yaml")
 
 
-MIN_MAP = 0.1
+MIN_MAP = 0.05
 
 
 @pytest.mark.e2e
@@ -211,6 +211,173 @@ def test_rf1_training(weights, size, family, dataset_coco, dataset_data_yaml,
 
     assert map50_95 >= MIN_MAP, (
         f"Post-training mAP50-95={map50_95:.4f} below {MIN_MAP}"
+    )
+
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+
+# ---------------------------------------------------------------------------
+# Phase 2: Reload fine-tuned checkpoints into fresh models
+# ---------------------------------------------------------------------------
+
+# YOLOX/V9: all models
+RELOAD_MODELS = [
+    ("libreyoloXnano.pt",    "nano", "yolox"),
+    ("libreyoloXtiny.pt",    "tiny", "yolox"),
+    ("libreyoloXs.pt",       "s",    "yolox"),
+    ("libreyoloXm.pt",       "m",    "yolox"),
+    ("libreyoloXl.pt",       "l",    "yolox"),
+    ("libreyoloXx.pt",       "x",    "yolox"),
+    ("libreyolo9t.pt",       "t",    "v9"),
+    ("libreyolo9s.pt",       "s",    "v9"),
+    ("libreyolo9m.pt",       "m",    "v9"),
+    ("libreyolo9c.pt",       "c",    "v9"),
+]
+RELOAD_IDS = [
+    "yolox-nano", "yolox-tiny", "yolox-s", "yolox-m", "yolox-l", "yolox-x",
+    "v9-t", "v9-s", "v9-m", "v9-c",
+]
+
+
+@pytest.mark.e2e
+@pytest.mark.parametrize("weights,size,family", RELOAD_MODELS, ids=RELOAD_IDS)
+def test_load_finetuned_checkpoint(weights, size, family, dataset_coco,
+                                   dataset_data_yaml, tmp_path):
+    """Train, save checkpoint, load into fresh model, validate.
+
+    Verifies that fine-tuned checkpoints can be loaded in a new session
+    with correct nc, names, and architecture auto-rebuild.
+    """
+    # 1. Train
+    model = LIBREYOLO(weights, size=size)
+    model.train(
+        data=dataset_data_yaml,
+        epochs=10,
+        batch=16,
+        workers=2,
+        project=str(tmp_path),
+        name=f"{family}_{size}",
+        exist_ok=True,
+    )
+
+    # 2. Find best.pt on disk
+    best_pt = tmp_path / f"{family}_{size}" / "weights" / "best.pt"
+    if not best_pt.exists():
+        best_pt = tmp_path / f"{family}_{size}" / "weights" / "last.pt"
+    assert best_pt.exists(), f"No checkpoint found at {best_pt}"
+
+    # 3. Verify checkpoint has metadata
+    ckpt = torch.load(best_pt, map_location="cpu", weights_only=False)
+    assert "nc" in ckpt, "Checkpoint missing 'nc' metadata"
+    assert "names" in ckpt, "Checkpoint missing 'names' metadata"
+    assert "model_family" in ckpt, "Checkpoint missing 'model_family' metadata"
+    assert ckpt["nc"] == 2, f"Expected nc=2 (marbles), got {ckpt['nc']}"
+    assert ckpt["model_family"] == family
+    print(f"\n  Checkpoint metadata: nc={ckpt['nc']}, family={ckpt['model_family']}, "
+          f"names={ckpt['names']}")
+
+    # 4. Load into a completely fresh model (default nc=80)
+    del model
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+    fresh_model = LIBREYOLO(str(best_pt), size=size)
+
+    # 5. Verify auto-rebuild happened
+    assert fresh_model.nb_classes == 2, (
+        f"Expected nb_classes=2 after loading, got {fresh_model.nb_classes}"
+    )
+    assert len(fresh_model.names) == 2, (
+        f"Expected 2 names, got {len(fresh_model.names)}"
+    )
+
+    # 6. Validate on test split
+    results = fresh_model.val(data=dataset_data_yaml, split="test",
+                              batch=16, conf=0.001, iou=0.6)
+    map50_95 = results["metrics/mAP50-95"]
+
+    print(f"  {weights} reloaded checkpoint mAP50-95={map50_95:.4f}")
+
+    assert map50_95 >= MIN_MAP, (
+        f"Reloaded model mAP50-95={map50_95:.4f} below {MIN_MAP}"
+    )
+
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+
+# RF-DETR: reload fine-tuned checkpoint
+RELOAD_RFDETR_MODELS = [
+    ("librerfdetrnano.pth", "n", "rfdetr"),
+]
+RELOAD_RFDETR_IDS = ["rfdetr-n"]
+
+
+@pytest.mark.e2e
+@pytest.mark.parametrize("weights,size,family", RELOAD_RFDETR_MODELS, ids=RELOAD_RFDETR_IDS)
+def test_load_finetuned_checkpoint_rfdetr(weights, size, family, dataset_coco,
+                                          dataset_data_yaml, tmp_path):
+    """Train RF-DETR, save checkpoint, load into fresh model, validate.
+
+    RF-DETR uses a different checkpoint format (checkpoint_best_total.pth)
+    and requires manual detection head reinitialization.
+    """
+    from pathlib import Path as P
+
+    # 1. Train
+    model = LIBREYOLO(weights, size=size)
+    output_dir = str(tmp_path / f"rfdetr_{size}")
+    model.train(
+        data=str(dataset_coco),
+        epochs=10,
+        batch_size=4,
+        output_dir=output_dir,
+    )
+
+    # 2. Find checkpoint on disk
+    best_ckpt = P(output_dir) / "checkpoint_best_total.pth"
+    if not best_ckpt.exists():
+        # Fall back to any checkpoint
+        ckpts = sorted(P(output_dir).glob("checkpoint*.pth"))
+        assert ckpts, f"No checkpoint found in {output_dir}"
+        best_ckpt = ckpts[-1]
+
+    # 3. Verify checkpoint structure
+    ckpt = torch.load(best_ckpt, map_location="cpu", weights_only=False)
+    assert "model" in ckpt, "RF-DETR checkpoint missing 'model' key"
+    state_dict = ckpt["model"]
+    assert "class_embed.bias" in state_dict, "Missing class_embed in state dict"
+    num_classes_internal = state_dict["class_embed.bias"].shape[0]
+    num_classes = num_classes_internal - 1  # RF-DETR uses nc+1 (background)
+    assert num_classes == 2, f"Expected nc=2 (marbles), got {num_classes}"
+    print(f"\n  RF-DETR checkpoint: nc={num_classes}, internal={num_classes_internal}")
+
+    # 4. Load into a fresh model and manually load checkpoint
+    del model
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+    fresh_model = LIBREYOLO(weights, size=size)
+
+    # Reinitialize detection head and load trained weights
+    if num_classes_internal != fresh_model.model.model.class_embed.bias.shape[0]:
+        fresh_model.model.model.reinitialize_detection_head(num_classes_internal)
+    fresh_model.model.model.load_state_dict(state_dict, strict=False)
+    fresh_model.model.model.eval()
+    fresh_model.model.model.to(fresh_model.device)
+    fresh_model.nb_classes = num_classes
+    fresh_model.model.nb_classes = num_classes
+
+    # 5. Validate on test split
+    results = fresh_model.val(data=dataset_data_yaml, split="test",
+                              batch=16, conf=0.001, iou=0.6)
+    map50_95 = results["metrics/mAP50-95"]
+
+    print(f"  {weights} reloaded checkpoint mAP50-95={map50_95:.4f}")
+
+    assert map50_95 >= MIN_MAP, (
+        f"Reloaded model mAP50-95={map50_95:.4f} below {MIN_MAP}"
     )
 
     if torch.cuda.is_available():

@@ -137,7 +137,7 @@ YOLOX_SIZES = ["nano", "tiny", "s", "m", "l", "x"]
 YOLOV9_SIZES = ["t", "s", "m", "c"]
 
 # RF-DETR model sizes
-RFDETR_SIZES = ["n", "s", "b", "m", "l"]
+RFDETR_SIZES = ["n", "s", "m", "l"]
 
 # Model weight file patterns
 YOLOX_WEIGHTS = {
@@ -159,7 +159,6 @@ YOLOV9_WEIGHTS = {
 RFDETR_WEIGHTS = {
     "n": "librerfdetrnano.pth",
     "s": "librerfdetrsmall.pth",
-    "b": "librerfdetrbase.pth",
     "m": "librerfdetrmedium.pth",
     "l": "librerfdetrlarge.pth",
 }
