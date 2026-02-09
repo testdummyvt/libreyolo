@@ -530,9 +530,6 @@ class DetectionValidator(BaseValidator):
             # Use legacy DetMetrics
             return self.metrics.compute()
 
-    def _generate_plots(self) -> None:
-        """Generate and save visualization plots."""
-        pass  # Plotting removed to reduce bloat
 
 
 class ValDataset:

@@ -7,21 +7,20 @@ Example usage:
     >>> from libreyolo import LIBREYOLORFDETR
     >>>
     >>> # Use pretrained COCO weights (auto-downloads)
-    >>> model = LIBREYOLORFDETR(size="b")  # or "n", "s", "m", "l"
+    >>> model = LIBREYOLORFDETR(size="s")  # or "n", "m", "l"
     >>> detections = model.predict("path/to/image.jpg")
     >>> print(detections["boxes"], detections["scores"], detections["classes"])
     >>>
     >>> # With custom weights
-    >>> model = LIBREYOLORFDETR(model_path="custom_weights.pth", size="b")
+    >>> model = LIBREYOLORFDETR(model_path="custom_weights.pth", size="s")
     >>>
     >>> # Training (Ultralytics-style API)
-    >>> model = LIBREYOLORFDETR(size="b")
+    >>> model = LIBREYOLORFDETR(size="s")
     >>> model.train(data="coco128", epochs=10, batch_size=4)
 
 Available model sizes:
     - "n" (nano): Fastest, smallest
     - "s" (small): Fast, lightweight
-    - "b" (base): Balanced speed/accuracy
     - "m" (medium): Better accuracy
     - "l" (large): Best accuracy, slowest
 """

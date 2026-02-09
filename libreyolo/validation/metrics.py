@@ -1,7 +1,7 @@
 """
 Detection metrics for LibreYOLO validation.
 
-Provides classes for computing mAP, precision, recall, and confusion matrix.
+Provides classes for computing mAP, precision, and recall.
 """
 
 from pathlib import Path
@@ -233,5 +233,4 @@ class DetMetrics:
         self.ap_class = None
         self.precision = None
         self.recall = None
-
 

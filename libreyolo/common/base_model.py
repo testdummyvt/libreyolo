@@ -897,7 +897,6 @@ class LibreYOLOBase(ABC):
         device: str = None,
         split: str = "val",
         save_json: bool = False,
-        plots: bool = True,
         verbose: bool = True,
         **kwargs,
     ) -> Dict:
@@ -916,7 +915,6 @@ class LibreYOLOBase(ABC):
             device: Device to use (default: same as model).
             split: Dataset split to validate on ("val", "test").
             save_json: Save predictions in COCO JSON format.
-            plots: Generate confusion matrix and other plots.
             verbose: Print detailed metrics.
             **kwargs: Additional arguments passed to ValidationConfig.
 
@@ -947,7 +945,6 @@ class LibreYOLOBase(ABC):
             device=device or str(self.device),
             split=split,
             save_json=save_json,
-            plots=plots,
             verbose=verbose,
             **kwargs,
         )

@@ -38,7 +38,7 @@ class RFDETRModel(nn.Module):
 
     def __init__(
         self,
-        config: str = 'b',
+        config: str = 's',
         nb_classes: int = 80,
         pretrain_weights: str = None,
         device: str = 'cpu',
@@ -47,7 +47,7 @@ class RFDETRModel(nn.Module):
         Initialize RF-DETR model.
 
         Args:
-            config: Model size variant ('n', 's', 'b', 'm', 'l')
+            config: Model size variant ('n', 's', 'm', 'l')
             nb_classes: Number of object classes (use 80 for COCO)
             pretrain_weights: Path to pretrained weights (optional)
             device: Device to use ('cpu', 'cuda', 'mps')
@@ -128,7 +128,7 @@ class RFDETRModel(nn.Module):
 
 
 def create_rfdetr_model(
-    config: str = 'b',
+    config: str = 's',
     nb_classes: int = 80,
     pretrain_weights: str = None,
     device: str = 'cpu',
@@ -137,7 +137,7 @@ def create_rfdetr_model(
     Create an RF-DETR model.
 
     Args:
-        config: Model size variant ('n', 's', 'b', 'm', 'l')
+        config: Model size variant ('n', 's', 'm', 'l')
         nb_classes: Number of object classes
         pretrain_weights: Path to pretrained weights
         device: Device to use

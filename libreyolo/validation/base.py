@@ -189,10 +189,6 @@ class BaseValidator(ABC):
         if self.config.verbose:
             self._print_results(metrics)
 
-        # Generate plots
-        if self.config.plots:
-            self._generate_plots()
-
         # Save config
         self.config.to_yaml(self.save_dir / "config.yaml")
 
@@ -353,9 +349,4 @@ class BaseValidator(ABC):
         Returns:
             Dictionary with metric names and values.
         """
-        pass
-
-    @abstractmethod
-    def _generate_plots(self) -> None:
-        """Generate and save visualization plots."""
         pass

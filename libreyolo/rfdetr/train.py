@@ -20,7 +20,7 @@ RFDETR_TRAINERS = {
 
 def train_rfdetr(
     data: str,
-    size: str = "b",
+    size: str = "s",
     epochs: int = 100,
     batch_size: int = 4,
     lr: float = 1e-4,
@@ -39,7 +39,7 @@ def train_rfdetr(
 
     Args:
         data: Path to dataset (Roboflow format with COCO annotations)
-        size: Model size ('n', 's', 'b', 'm', 'l')
+        size: Model size ('n', 's', 'm', 'l')
         epochs: Number of training epochs
         batch_size: Batch size per GPU
         lr: Learning rate
@@ -52,7 +52,7 @@ def train_rfdetr(
 
     Example:
         >>> from libreyolo.rfdetr import train_rfdetr
-        >>> train_rfdetr(data="path/to/dataset", size="b", epochs=50)
+        >>> train_rfdetr(data="path/to/dataset", size="s", epochs=50)
     """
     if size not in RFDETR_TRAINERS:
         raise ValueError(f"Invalid size: {size}. Must be one of {list(RFDETR_TRAINERS.keys())}")

@@ -57,24 +57,24 @@ class LIBREYOLORFDETR(LibreYOLOBase):
             - str: Path to a .pt/.pth weights file
             - dict: Pre-loaded state_dict (e.g., from torch.load())
             - None: Use default pretrained weights for the size
-        size: Model size variant. Must be one of: "n", "s", "b", "m", "l"
+        size: Model size variant. Must be one of: "n", "s", "m", "l"
         nb_classes: Number of classes (default: 80 for COCO)
         device: Device for inference. "auto" uses CUDA if available.
 
     Example:
         >>> # Use pretrained COCO weights
-        >>> model = LIBREYOLORFDETR(size="b")
+        >>> model = LIBREYOLORFDETR(size="s")
         >>> detections = model.predict("path/to/image.jpg")
 
         >>> # Use custom weights
-        >>> model = LIBREYOLORFDETR(model_path="custom_weights.pth", size="b")
+        >>> model = LIBREYOLORFDETR(model_path="custom_weights.pth", size="s")
         >>> detections = model.predict("path/to/image.jpg", conf_thres=0.5)
     """
 
     def __init__(
         self,
         model_path: str = None,
-        size: str = "b",
+        size: str = "s",
         nb_classes: int = 80,
         device: str = "auto",
         **kwargs,
@@ -332,7 +332,7 @@ class LIBREYOLORFDETR(LibreYOLOBase):
             Dictionary with training results including output_dir and model
 
         Example:
-            >>> model = LIBREYOLORFDETR(size="b")
+            >>> model = LIBREYOLORFDETR(size="s")
             >>> # Download a dataset from Roboflow in COCO format
             >>> results = model.train(data="path/to/dataset", epochs=50)
         """
