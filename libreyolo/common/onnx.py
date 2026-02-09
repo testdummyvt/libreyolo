@@ -3,6 +3,7 @@ ONNX runtime inference backend for LIBREYOLO.
 """
 
 from datetime import datetime
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
@@ -14,6 +15,8 @@ from .utils import preprocess_image, draw_boxes, get_safe_stem, COCO_CLASSES
 from .image_loader import ImageLoader
 from .results import Boxes, Results
 from ..yolox.utils import preprocess_image as yolox_preprocess_image
+
+logger = logging.getLogger(__name__)
 
 
 def _nms(boxes: np.ndarray, scores: np.ndarray, iou_threshold: float = 0.45) -> list:
@@ -147,8 +150,8 @@ class LIBREYOLOOnnx:
                         self.names = {
                             i: f"class_{i}" for i in range(self.nb_classes)
                         }
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Failed to read ONNX metadata from %s: %s", onnx_path, e)
 
     def __call__(
         self,
