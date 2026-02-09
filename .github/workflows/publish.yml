@@ -18,7 +18,7 @@ jobs:
         run: uv sync --dev
 
       - name: Run unit tests
-        run: uv run pytest -m unit
+        run: uv run pytest -m unit --ignore=tests/e2e
 
   build:
     name: Build package
