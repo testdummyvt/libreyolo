@@ -4,6 +4,7 @@ Libre YOLO - An open source YOLO library with MIT license.
 from importlib.metadata import version, PackageNotFoundError
 
 from .v9.model import LIBREYOLO9
+from .v9_nms_free.model import LIBREYOLO9NMSFree
 from .yolox.model import LIBREYOLOX
 from .factory import LIBREYOLO, create_model
 
@@ -50,6 +51,7 @@ __all__ = [
     # Main API
     "LIBREYOLO",
     "LIBREYOLO9",
+    "LIBREYOLO9NMSFree"
     "LIBREYOLOX",
     "LIBREYOLORFDETR",
     "LIBREYOLOOnnx",
