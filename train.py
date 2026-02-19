@@ -1,9 +1,9 @@
 from libreyolo import LIBREYOLO9NMSFree
 
-model = LIBREYOLO9NMSFree(model_path = None, size="t")
+model = LIBREYOLO9NMSFree(model_path = "/home/testdummy/projects/jabra/libreyolo/weights/libreyolo9t.pt", size="t")
 
 results = model.train(
-    data="coco.yaml",     # path to data.yaml (required)
+    data="coco128.yaml",     # path to data.yaml (required)
 
     # Training parameters
     epochs=100,              # default: 100
@@ -21,7 +21,7 @@ results = model.train(
 
     # Output
     project="runs/train",
-    name="libreyolonmsfree",
+    name="libreyolonmsfree_1",
     exist_ok=False,
 
     # Training features
