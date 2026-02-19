@@ -11,9 +11,11 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
+from tqdm import tqdm
 import yaml
 import torch
 from torch.utils.data import Dataset, DataLoader
+
 
 
 def load_data_config(data_path: str) -> Dict:
@@ -134,7 +136,7 @@ class YOLODataset(Dataset):
     def _load_annotations(self) -> List:
         """Load all annotations."""
         annotations = []
-        for img_file, label_file in zip(self.img_files, self.label_files):
+        for img_file, label_file in tqdm(zip(self.img_files, self.label_files), desc="Loading annotations", total=len(self.img_files)):
             anno = self._load_label(label_file, img_file)
             annotations.append(anno)
         return annotations
