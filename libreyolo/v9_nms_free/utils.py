@@ -1,7 +1,7 @@
 """
-Utility functions for LibreYOLO v9.
+Utility functions for LibreYOLO v9_nms_free.
 
-Provides preprocessing and postprocessing functions for YOLOv9 inference.
+Provides preprocessing and postprocessing functions for YOLOv9 NMS-Free inference.
 """
 
 import torch
@@ -24,7 +24,7 @@ def postprocess(
     letterbox: bool = False,
 ) -> Dict:
     """
-    Postprocess YOLOv9 model outputs to get final detections.
+    Postprocess YOLOv9 NMS-Free model outputs to get final detections.
 
     Args:
         output: Model output dictionary with 'predictions' key

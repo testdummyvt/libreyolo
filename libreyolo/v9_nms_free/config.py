@@ -1,7 +1,7 @@
 """
-Training configuration for YOLOv9.
+Training configuration for YOLOv9 NMS-Free.
 
-Provides a dataclass-based configuration with v9-specific defaults.
+Provides a dataclass-based configuration with v9_nms_free-specific defaults.
 """
 
 from dataclasses import dataclass, field, asdict
@@ -11,11 +11,11 @@ import yaml
 
 
 @dataclass
-class V9TrainConfig:
+class V9NMSFreeTrainConfig:
     """
-    Configuration for YOLOv9 training.
+    Configuration for YOLOv9 NMS-Free training.
 
-    All YOLOv9 training parameters with defaults from the official YOLO repo.
+    All YOLOv9 NMS-Free training parameters with defaults from the official YOLO repo.
     """
 
     # Model configuration
@@ -34,21 +34,21 @@ class V9TrainConfig:
     batch: int = 16
     device: str = "auto"  # "auto", "cuda", "mps", "cpu"
 
-    # Optimizer settings (YOLOv9 defaults from YOLO repo)
+    # Optimizer settings (YOLOv9 NMS-Free defaults from YOLO repo)
     optimizer: str = "sgd"  # "sgd", "adam", "adamw"
     lr0: float = 0.01  # Base learning rate
     momentum: float = 0.937  # Higher momentum than YOLOX
     weight_decay: float = 0.0005
     nesterov: bool = True
 
-    # Learning rate schedule (LinearLR with warmup - v9 default)
+    # Learning rate schedule (LinearLR with warmup - v9_nms_free default)
     scheduler: str = "linear"  # "linear", "cos", "warmcos"
     warmup_epochs: int = 3
     warmup_lr_start: float = 0.0001
     no_aug_epochs: int = 15
     min_lr_ratio: float = 0.01  # Final LR = lr0 * min_lr_ratio
 
-    # Loss weights (v9 defaults)
+    # Loss weights (v9_nms_free defaults)
     box_weight: float = 7.5  # CIoU loss weight
     dfl_weight: float = 1.5  # Distribution Focal Loss weight
     cls_weight: float = 0.5  # BCE classification loss weight
@@ -58,9 +58,9 @@ class V9TrainConfig:
     tal_iou_factor: float = 6.0
     tal_cls_factor: float = 0.5
 
-    # Augmentation settings (v9 defaults - more conservative than YOLOX)
+    # Augmentation settings (v9_nms_free defaults - more conservative than YOLOX)
     mosaic_prob: float = 1.0
-    mixup_prob: float = 0.0  # Disabled by default in v9
+    mixup_prob: float = 0.0  # Disabled by default in v9_nms_free
     hsv_prob: float = 1.0
     flip_prob: float = 0.5
     degrees: float = 0.0  # No rotation by default
@@ -76,7 +76,7 @@ class V9TrainConfig:
 
     # Checkpointing
     project: str = "runs/train"
-    name: str = "v9_exp"
+    name: str = "v9_nms_free_exp"
     exist_ok: bool = False
     save_period: int = 10  # Save checkpoint every N epochs
     eval_interval: int = 10  # Evaluate every N epochs
@@ -121,7 +121,7 @@ class V9TrainConfig:
             self.mixup_scale = tuple(self.mixup_scale)
 
     @classmethod
-    def from_yaml(cls, path: Union[str, Path]) -> "V9TrainConfig":
+    def from_yaml(cls, path: Union[str, Path]) -> "V9NMSFreeTrainConfig":
         """Load configuration from YAML file."""
         with open(path, "r") as f:
             data = yaml.safe_load(f)
@@ -148,11 +148,11 @@ class V9TrainConfig:
         """Convert to dictionary."""
         return asdict(self)
 
-    def update(self, **kwargs) -> "V9TrainConfig":
+    def update(self, **kwargs) -> "V9NMSFreeTrainConfig":
         """Create a new config with updated values."""
         data = asdict(self)
         data.update(kwargs)
-        return V9TrainConfig(**data)
+        return V9NMSFreeTrainConfig(**data)
 
     @property
     def input_size(self) -> Tuple[int, int]:
@@ -166,7 +166,7 @@ class V9TrainConfig:
         return self.lr0 * self.batch / 64
 
     def __repr__(self) -> str:
-        lines = ["V9TrainConfig("]
+        lines = ["V9NMSFreeTrainConfig("]
         for key, value in asdict(self).items():
             lines.append(f"  {key}={value!r},")
         lines.append(")")
@@ -174,29 +174,29 @@ class V9TrainConfig:
 
 
 # Preset configurations for different model sizes
-V9_CONFIGS = {
-    "t": V9TrainConfig(size="t", imgsz=640),
-    "s": V9TrainConfig(size="s", imgsz=640),
-    "m": V9TrainConfig(size="m", imgsz=640),
-    "c": V9TrainConfig(size="c", imgsz=640),
+V9_NMS_FREE_CONFIGS = {
+    "t": V9NMSFreeTrainConfig(size="t", imgsz=640),
+    "s": V9NMSFreeTrainConfig(size="s", imgsz=640),
+    "m": V9NMSFreeTrainConfig(size="m", imgsz=640),
+    "c": V9NMSFreeTrainConfig(size="c", imgsz=640),
 }
 
 
-def get_v9_config(size: str = "c", **kwargs) -> V9TrainConfig:
+def get_v9_nms_free_config(size: str = "c", **kwargs) -> V9NMSFreeTrainConfig:
     """
-    Get a preset V9 configuration with optional overrides.
+    Get a preset V9 NMS-Free configuration with optional overrides.
 
     Args:
         size: Model size ("t", "s", "m", "c")
         **kwargs: Override any configuration parameter
 
     Returns:
-        V9TrainConfig instance
+        V9NMSFreeTrainConfig instance
     """
-    if size not in V9_CONFIGS:
-        raise ValueError(f"Unknown size '{size}'. Available: {list(V9_CONFIGS.keys())}")
+    if size not in V9_NMS_FREE_CONFIGS:
+        raise ValueError(f"Unknown size '{size}'. Available: {list(V9_NMS_FREE_CONFIGS.keys())}")
 
-    config = V9_CONFIGS[size]
+    config = V9_NMS_FREE_CONFIGS[size]
     if kwargs:
         config = config.update(**kwargs)
     return config

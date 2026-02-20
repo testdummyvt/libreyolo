@@ -1,7 +1,7 @@
 """
-LibreYOLO9 inference and training wrapper.
+LibreYOLO9 NMS-Free inference and training wrapper.
 
-Provides a high-level API for YOLOv9 object detection.
+Provides a high-level API for YOLOv9 NMS-Free object detection.
 """
 
 from pathlib import Path
@@ -20,7 +20,7 @@ from .utils import postprocess
 
 class LIBREYOLO9NMSFree(LibreYOLOBase):
     """
-    LibreYOLO9 model for object detection.
+    LibreYOLO9 NMS-Free model for object detection.
 
     Args:
         model_path: Model weights source. Can be:
@@ -32,7 +32,7 @@ class LIBREYOLO9NMSFree(LibreYOLOBase):
         device: Device for inference. "auto" uses CUDA if available, else MPS, else CPU.
 
     Example:
-        >>> model = LIBREYOLO9(model_path="path/to/weights.pt", size="s")
+        >>> model = LIBREYOLO9NMSFree(model_path="path/to/weights.pt", size="s")
         >>> detections = model(image=image_path, save=True)
         >>> # Use tiling for large images
         >>> detections = model(image=large_image_path, save=True, tiling=True)
@@ -60,7 +60,7 @@ class LIBREYOLO9NMSFree(LibreYOLOBase):
         return ["t", "s", "m", "c"]
 
     def _get_model_name(self) -> str:
-        return "LIBREYOLO9NMSFree"
+        return "v9_nms_free"
 
     def _get_input_size(self) -> int:
         return 640
@@ -120,11 +120,11 @@ class LIBREYOLO9NMSFree(LibreYOLOBase):
         )
 
     def _strict_loading(self) -> bool:
-        """Use non-strict loading for YOLOv9 to handle profiling artifacts in weights."""
+        """Use non-strict loading for YOLOv9 NMS-Free to handle profiling artifacts in weights."""
         return False
 
     def _get_val_preprocessor(self, img_size: int = None):
-        """YOLOv9 uses letterbox + normalization (0-1 range)."""
+        """YOLOv9 NMS-Free uses letterbox + normalization (0-1 range)."""
         from libreyolo.validation.preprocessors import V9ValPreprocessor
         if img_size is None:
             img_size = 640
@@ -185,7 +185,7 @@ class LIBREYOLO9NMSFree(LibreYOLOBase):
 
         # Output parameters
         project: str = "runs/train",
-        name: str = "v9_exp",
+        name: str = "v9_nms_free_exp",
         exist_ok: bool = False,
 
         # Training features
@@ -196,7 +196,7 @@ class LIBREYOLO9NMSFree(LibreYOLOBase):
         **kwargs
     ) -> dict:
         """
-        Train the YOLOv9 model on a dataset.
+        Train the YOLOv9 NMS-Free model on a dataset.
 
         Args:
             data: Path to data.yaml file (required)
@@ -233,8 +233,8 @@ class LIBREYOLO9NMSFree(LibreYOLOBase):
                 - 'last_checkpoint': Path to last model checkpoint
 
         Example:
-            >>> from libreyolo import LIBREYOLO9
-            >>> model = LIBREYOLO9(size='t')
+            >>> from libreyolo import LIBREYOLO9NMSFree
+            >>> model = LIBREYOLO9NMSFree(size='t')
             >>> results = model.train(
             ...     data='coco128.yaml',
             ...     epochs=100,
@@ -244,8 +244,8 @@ class LIBREYOLO9NMSFree(LibreYOLOBase):
             ... )
             >>> print(f"Best mAP: {results['best_mAP50_95']:.3f}")
         """
-        from .trainer import V9Trainer
-        from .config import V9TrainConfig
+        from .trainer import V9NMSFreeTrainer
+        from .config import V9NMSFreeTrainConfig
         from libreyolo.data import load_data_config
 
         # Load and validate data config
@@ -261,7 +261,7 @@ class LIBREYOLO9NMSFree(LibreYOLOBase):
             self._rebuild_for_new_classes(yaml_nc)
 
         # Create training config
-        config = V9TrainConfig(
+        config = V9NMSFreeTrainConfig(
             size=self.size,
             num_classes=self.nb_classes,
             reg_max=self.reg_max,
@@ -294,14 +294,14 @@ class LIBREYOLO9NMSFree(LibreYOLOBase):
                 torch.cuda.manual_seed_all(seed)
 
         # Create trainer (pass wrapper model for validation)
-        trainer = V9Trainer(model=self.model, config=config, wrapper_model=self)
+        trainer = V9NMSFreeTrainer(model=self.model, config=config, wrapper_model=self)
 
         # Resume if requested
         if resume:
             if not self.model_path:
                 raise ValueError(
                     "resume=True requires a checkpoint. Load one first: "
-                    "model = LIBREYOLO9('path/to/last.pt', size='t'); model.train(data=..., resume=True)"
+                    "model = LIBREYOLO9NMSFree('path/to/last.pt', size='t'); model.train(data=..., resume=True)"
                 )
             trainer.resume(str(self.model_path))
 

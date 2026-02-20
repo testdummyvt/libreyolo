@@ -1,9 +1,9 @@
 """
-YOLOv9 Trainer for LibreYOLO.
+YOLOv9 NMS-Free Trainer for LibreYOLO.
 
-Provides a training loop adapted from YOLOX trainer with v9-specific changes:
-- LinearLR scheduler with warmup (v9 default)
-- V9TrainTransform for normalized xyxy format
+Provides a training loop adapted from YOLOX trainer with v9_nms_free-specific changes:
+- LinearLR scheduler with warmup (v9_nms_free default)
+- V9NMSFreeTrainTransform for normalized xyxy format
 - Loss integrated into model forward()
 """
 
@@ -18,8 +18,8 @@ import torch.nn as nn
 from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm
 
-from .config import V9TrainConfig
-from .transforms import V9TrainTransform, V9MosaicMixupDataset
+from .config import V9NMSFreeTrainConfig
+from .transforms import V9NMSFreeTrainTransform, V9NMSFreeMosaicMixupDataset
 from ..training.ema import ModelEMA
 from ..training.dataset import YOLODataset, COCODataset, create_dataloader
 from ..data import load_data_config
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 class LinearLRScheduler:
     """
-    Linear learning rate scheduler with warmup for YOLOv9.
+    Linear learning rate scheduler with warmup for YOLOv9 NMS-Free.
 
     LR schedule:
     - Warmup: linear increase from warmup_lr_start to lr over warmup_iters
@@ -110,9 +110,9 @@ class CosineAnnealingScheduler:
         return lr
 
 
-class V9Trainer:
+class V9NMSFreeTrainer:
     """
-    YOLOv9 Trainer.
+    YOLOv9 NMS-Free Trainer.
 
     Handles the complete training loop with:
     - Mixed precision training (AMP)
@@ -126,14 +126,14 @@ class V9Trainer:
     def __init__(
         self,
         model: nn.Module,
-        config: V9TrainConfig,
+        config: V9NMSFreeTrainConfig,
         wrapper_model: Optional[Any] = None,
     ):
         """
         Initialize trainer.
 
         Args:
-            model: YOLOv9 model to train
+            model: YOLOv9 NMS-Free model to train
             config: Training configuration
             wrapper_model: LibreYOLO wrapper model (for validation), optional
         """
@@ -267,8 +267,8 @@ class V9Trainer:
         """Setup training data loader."""
         img_size = self.config.input_size
 
-        # Create preprocessing transform (v9 format: normalized xyxy)
-        preproc = V9TrainTransform(
+        # Create preprocessing transform (v9_nms_free format: normalized xyxy)
+        preproc = V9NMSFreeTrainTransform(
             max_labels=100,
             flip_prob=self.config.flip_prob,
             hsv_prob=self.config.hsv_prob,
@@ -357,8 +357,8 @@ class V9Trainer:
         else:
             raise ValueError("Either 'data' or 'data_dir' must be specified in config")
 
-        # Wrap with mosaic/mixup augmentation (v9 version)
-        train_dataset = V9MosaicMixupDataset(
+        # Wrap with mosaic/mixup augmentation (v9_nms_free version)
+        train_dataset = V9NMSFreeMosaicMixupDataset(
             dataset=train_dataset,
             img_size=img_size,
             mosaic=True,
@@ -442,7 +442,7 @@ class V9Trainer:
         self.setup()
 
         logger.info(f"Starting training for {self.config.epochs} epochs")
-        logger.info(f"Model: YOLOv9-{self.config.size}")
+        logger.info(f"Model: YOLOv9 NMS-Free-{self.config.size}")
         logger.info(f"Batch size: {self.config.batch}")
         logger.info(f"Learning rate: {self.config.effective_lr}")
 
@@ -671,7 +671,7 @@ class V9Trainer:
             # Model metadata for loading fine-tuned models in new sessions
             "nc": self.config.num_classes,
             "size": self.config.size,
-            "model_family": "v9",
+            "model_family": "v9_nms_free",
         }
         if self.wrapper_model is not None:
             checkpoint["names"] = self.wrapper_model.names

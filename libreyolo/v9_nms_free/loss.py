@@ -1,8 +1,8 @@
 """
-YOLOv9 Loss functions for training.
+YOLOv9 NMS-Free Loss functions for training.
 
 Ported from https://github.com/WongKinYiu/YOLO (MIT License)
-Adapted for LibreYOLO's v9 architecture.
+Adapted for LibreYOLO's v9_nms_free architecture.
 
 Includes:
 - Task Aligned Assignment (TAL) via BoxMatcher

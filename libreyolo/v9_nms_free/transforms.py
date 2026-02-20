@@ -1,9 +1,9 @@
 """
-Data augmentation transforms for YOLOv9 training.
+Data augmentation transforms for YOLOv9 NMS-Free training.
 
 Key difference from YOLOX: outputs normalized xyxy format for loss computation.
 - YOLOX: [class, cx, cy, w, h] in pixel coordinates
-- YOLOv9: [class, x1, y1, x2, y2] in normalized (0-1) coordinates
+- YOLOv9 NMS-Free: [class, x1, y1, x2, y2] in normalized (0-1) coordinates
 """
 
 import random
@@ -57,9 +57,9 @@ def mirror(image, boxes, prob=0.5):
     return image, boxes
 
 
-class V9TrainTransform:
+class V9NMSFreeTrainTransform:
     """
-    Transform for YOLOv9 training data.
+    Transform for YOLOv9 NMS-Free training data.
 
     Outputs normalized xyxy format: [class, x1, y1, x2, y2] where coordinates
     are normalized to [0, 1] range.
@@ -156,8 +156,8 @@ class V9TrainTransform:
         return image_t, padded_labels
 
 
-class V9ValTransform:
-    """Transform for YOLOv9 validation data."""
+class V9NMSFreeValTransform:
+    """Transform for YOLOv9 NMS-Free validation data."""
 
     def __init__(self, swap=(2, 0, 1)):
         self.swap = swap
@@ -179,9 +179,9 @@ class V9ValTransform:
         return img, np.zeros((1, 5))
 
 
-class V9MosaicMixupDataset:
+class V9NMSFreeMosaicMixupDataset:
     """
-    Dataset wrapper that applies Mosaic and Mixup augmentation for YOLOv9.
+    Dataset wrapper that applies Mosaic and Mixup augmentation for YOLOv9 NMS-Free.
 
     Similar to YOLOX MosaicMixupDataset but outputs normalized xyxy format.
     """
@@ -208,7 +208,7 @@ class V9MosaicMixupDataset:
             dataset: Base dataset with pull_item method
             img_size: Target image size (height, width)
             mosaic: Enable mosaic augmentation
-            preproc: Preprocessing transform (default: V9TrainTransform)
+            preproc: Preprocessing transform (default: V9NMSFreeTrainTransform)
             degrees: Rotation degrees (default 0 for v9)
             translate: Translation factor
             mosaic_scale: Scale range for mosaic
@@ -220,7 +220,7 @@ class V9MosaicMixupDataset:
         """
         self.dataset = dataset
         self.img_size = img_size
-        self.preproc = preproc or V9TrainTransform()
+        self.preproc = preproc or V9NMSFreeTrainTransform()
         self.degrees = degrees
         self.translate = translate
         self.scale = mosaic_scale
