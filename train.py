@@ -1,13 +1,13 @@
-from libreyolo import LIBREYOLO9
+from libreyolo import LIBREYOLORTDETR
 
-model = LIBREYOLO9(model_path = "/home/testdummy/projects/jabra/libreyolo/weights/libreyolo9t.pt", size="t")
+model = LIBREYOLORTDETR(model_path = None, size="r18")
 
 results = model.train(
-    data="coco.yaml",     # path to data.yaml (required)
+    data="coco128.yaml",     # path to data.yaml (required)
 
     # Training parameters
     epochs=100,              # default: 100
-    batch=32,
+    batch=16,
     imgsz=640,
 
     # Optimizer
@@ -21,13 +21,14 @@ results = model.train(
 
     # Output
     project="runs/train",
-    name="libreyolo_1",
+    name="rtdetr_train",
     exist_ok=False,
 
     # Training features
-    amp=True,                # automatic mixed precision
+    amp=False,                # automatic mixed precision
     patience=50,             # early stopping patience
     resume=False,            # resume from loaded checkpoint
+    log_interval = 1,
 )
 
 print(f"Best mAP50-95: {results['best_mAP50_95']:.3f}")

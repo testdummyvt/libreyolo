@@ -6,9 +6,8 @@ from importlib.metadata import version, PackageNotFoundError
 from .v9.model import LIBREYOLO9
 from .v9_nms_free.model import LIBREYOLO9NMSFree
 from .yolox.model import LIBREYOLOX
+from .rtdetr.model import LIBREYOLORTDETR
 from .factory import LIBREYOLO, create_model
-
-# Lazy import for RF-DETR to avoid dependency issues
 def __getattr__(name):
     if name == "LIBREYOLORFDETR":
         import importlib.util
@@ -51,8 +50,9 @@ __all__ = [
     # Main API
     "LIBREYOLO",
     "LIBREYOLO9",
-    "LIBREYOLO9NMSFree"
+    "LIBREYOLO9NMSFree",
     "LIBREYOLOX",
+    "LIBREYOLORTDETR",
     "LIBREYOLORFDETR",
     "LIBREYOLOOnnx",
     "LIBREYOLOOpenVINO",
