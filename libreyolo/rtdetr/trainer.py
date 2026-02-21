@@ -20,22 +20,30 @@ from .loss import RTDETRLoss
 logger = logging.getLogger(__name__)
 
 def convert_targets_for_detr(targets, batch_size):
-    # targets is [B, max_labels, 5] where columns are (cls, cx, cy, w, h)
+    # targets is [B, max_labels, 5] where columns are (cls, x1, y1, x2, y2)
     detr_targets = []
     for i in range(batch_size):
         batch_targets = targets[i]
         
-        # Valid boxes have width/height > 0
-        mask = (batch_targets[:, 3] > 0) & (batch_targets[:, 4] > 0)
+        # Valid boxes have x2 > x1 and y2 > y1
+        mask = (batch_targets[:, 3] > batch_targets[:, 1]) & (batch_targets[:, 4] > batch_targets[:, 2])
         valid_targets = batch_targets[mask]
         
         labels = valid_targets[:, 0].long()
-        boxes = valid_targets[:, 1:5] # cx, cy, w, h
+        xyxy = valid_targets[:, 1:5]
         
         if len(labels) == 0:
-            detr_targets.append({"labels": torch.zeros(0, dtype=torch.int64, device=targets.device),
-                                 "boxes": torch.zeros(0, 4, dtype=torch.float32, device=targets.device)})
+            detr_targets.append({
+                "labels": torch.zeros(0, dtype=torch.int64, device=targets.device),
+                "boxes": torch.zeros(0, 4, dtype=torch.float32, device=targets.device)
+            })
         else:
+            # Convert xyxy to cxcywh
+            w = xyxy[:, 2] - xyxy[:, 0]
+            h = xyxy[:, 3] - xyxy[:, 1]
+            cx = xyxy[:, 0] + w / 2
+            cy = xyxy[:, 1] + h / 2
+            boxes = torch.stack([cx, cy, w, h], dim=-1)
             detr_targets.append({"labels": labels, "boxes": boxes})
             
     return detr_targets
