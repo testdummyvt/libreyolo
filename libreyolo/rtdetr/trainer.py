@@ -1,4 +1,5 @@
 import logging
+import re
 import time
 from datetime import datetime
 from pathlib import Path
@@ -99,28 +100,56 @@ class RTDETRTrainer:
         return device
 
     def _setup_optimizer(self) -> torch.optim.Optimizer:
-        pg0, pg1, pg2 = [], [], []  # optimizer parameter groups
+        """Setup AdamW optimizer with regex-based parameter group matching.
 
-        for k, v in self.model.named_modules():
-            if hasattr(v, "bias") and isinstance(v.bias, nn.Parameter):
-                pg2.append(v.bias)
-            if isinstance(v, (nn.BatchNorm2d, nn.LayerNorm)):
-                pg0.append(v.weight)
-            elif hasattr(v, "weight") and isinstance(v.weight, nn.Parameter):
-                pg1.append(v.weight)
+        Parameter groups (matched in order, first match wins):
+          1. backbone + norm      -> lr=0.00001, weight_decay=0
+          2. backbone + non-norm  -> lr=0.00001
+          3. encoder/decoder + norm/bias -> weight_decay=0
+          4. everything else      -> default lr and weight_decay
+        """
+        base_lr = 0.0001
+        base_wd = 0.0001
+        betas = (0.9, 0.999)
 
-        lr = self.config.effective_lr
+        # Define param group rules: (regex_pattern, overrides)
+        # Note: backbone (timm ResNet18) uses 'bn' for BatchNorm layers,
+        # while encoder/decoder use 'norm' (LayerNorm/BatchNorm via ConvNormLayer).
+        group_rules = [
+            (re.compile(r'^(?=.*backbone)(?=.*(?:norm|bn)).*$'),  {"lr": 0.00001, "weight_decay": 0.0}),
+            (re.compile(r'^(?=.*backbone)(?!.*(?:norm|bn)).*$'),  {"lr": 0.00001}),
+            (re.compile(r'^(?=.*(?:encoder|decoder))(?=.*(?:norm|bias)).*$'), {"weight_decay": 0.0}),
+        ]
 
-        if self.config.optimizer == "adamw":
-            optimizer = torch.optim.AdamW(pg0, lr=lr)
-        elif self.config.optimizer == "adam":
-            optimizer = torch.optim.Adam(pg0, lr=lr)
-        else:
-            optimizer = torch.optim.SGD(pg0, lr=lr, momentum=self.config.momentum, nesterov=self.config.nesterov)
+        # Buckets: one per rule + a default bucket
+        param_groups = [[] for _ in range(len(group_rules) + 1)]
 
-        optimizer.add_param_group({"params": pg1, "lr": lr, "weight_decay": self.config.weight_decay})
-        optimizer.add_param_group({"params": pg2, "lr": lr})
+        for name, param in self.model.named_parameters():
+            if not param.requires_grad:
+                continue
+            matched = False
+            for idx, (pattern, _) in enumerate(group_rules):
+                if pattern.search(name):
+                    param_groups[idx].append(param)
+                    matched = True
+                    break
+            if not matched:
+                param_groups[-1].append(param)
 
+        # Build optimizer param group dicts
+        opt_groups = []
+        for idx, params in enumerate(param_groups):
+            if not params:
+                continue
+            group = {"params": params, "lr": base_lr, "weight_decay": base_wd}
+            if idx < len(group_rules):
+                _, overrides = group_rules[idx]
+                group.update(overrides)
+            # Store lr_ratio so the scheduler can scale per-group LRs proportionally
+            group["lr_ratio"] = group["lr"] / base_lr
+            opt_groups.append(group)
+
+        optimizer = torch.optim.AdamW(opt_groups, lr=base_lr, betas=betas, weight_decay=base_wd)
         return optimizer
 
     def _setup_scheduler(self, iters_per_epoch: int):
@@ -376,14 +405,14 @@ class RTDETRTrainer:
             
             total_loss += loss_val
 
-            lr = self.lr_scheduler.update_lr(self.current_iter + 1)
+            base_lr = self.lr_scheduler.update_lr(self.current_iter + 1)
             for param_group in self.optimizer.param_groups:
-                param_group["lr"] = lr
+                param_group["lr"] = base_lr * param_group.get("lr_ratio", 1.0)
             num_batches += 1
 
             pbar.set_postfix({
                 "loss": f"{loss_val:.4f}",
-                "lr": f"{lr:.6f}",
+                "lr": f"{base_lr:.6f}",
                 "cls": f"{cls_loss_val:.4f}",
                 "box": f"{box_loss_val:.4f}",
                 "giou": f"{giou_loss_val:.4f}",
