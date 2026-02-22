@@ -3,15 +3,15 @@ from libreyolo import LIBREYOLORTDETR
 model = LIBREYOLORTDETR(model_path = None, size="r18")
 
 results = model.train(
-    data="coco128.yaml",     # path to data.yaml (required)
+    data="coco.yaml",     # path to data.yaml (required)
 
     # Training parameters
-    epochs=100,              # default: 100
-    batch=16,
+    epochs=50,              # default: 100
+    batch=24,
     imgsz=640,
 
     # Optimizer
-    lr0=0.001,                # initial learning rate
+    lr0=0.0001,                # initial learning rate
     optimizer="AdamW",         # "SGD", "Adam", "AdamW"
 
     # System
@@ -29,6 +29,7 @@ results = model.train(
     patience=50,             # early stopping patience
     resume=False,            # resume from loaded checkpoint
     log_interval = 1,
+    eval_interval = 5
 )
 
 print(f"Best mAP50-95: {results['best_mAP50_95']:.3f}")
