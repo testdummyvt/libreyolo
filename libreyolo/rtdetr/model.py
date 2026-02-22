@@ -146,7 +146,7 @@ class LIBREYOLORTDETR(LibreYOLOBase):
             input_size=actual_input_size,
             original_size=original_size,
             max_det=max_det,
-            letterbox=kwargs.get('letterbox', True),  # common.utils.preprocess_image uses letterbox by default
+            letterbox=kwargs.get('letterbox', False),  # preprocess_image uses simple resize, not letterbox
         )
 
     def _strict_loading(self) -> bool:
