@@ -2,7 +2,7 @@
 Neural network architecture for LibreYOLO RTDETR.
 
 Complete RT-DETR implementation including:
-- ResNet18 backbone (via timm)
+- PResNet backbone (from official RT-DETR)
 - Hybrid Encoder with AIFI + CCFF (RepVgg/CSPRep blocks)
 - Transformer Decoder with Multi-Scale Deformable Attention
 - Iterative bounding box refinement
@@ -19,7 +19,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
-import timm
+from .backbone import PResNet
 
 from .utils import (
     get_activation,
@@ -30,29 +30,7 @@ from .utils import (
 from .denoising import get_contrastive_denoising_training_group
 
 
-# =============================================================================
-# Backbone
-# =============================================================================
 
-class ResNet18Backbone(nn.Module):
-    """ResNet18 backbone that extracts multi-level features.
-
-    Args:
-        pretrained (bool): Whether to use pretrained weights.
-    """
-    def __init__(self, pretrained: bool = True):
-        super().__init__()
-        self.model = timm.create_model(
-            'resnet18',
-            pretrained=pretrained,
-            features_only=True,
-            out_indices=(2, 3, 4)  # strides 8, 16, 32
-        )
-        self.out_channels = [128, 256, 512]
-        self.strides = [8, 16, 32]
-
-    def forward(self, x):
-        return self.model(x)
 
 
 # =============================================================================
@@ -887,11 +865,16 @@ class RTDETRModel(nn.Module):
     """
     def __init__(self,
                  num_classes=80,
+                 backbone_depth=18,
+                 backbone_variant="d",
+                 backbone_pretrained=False,
+                 backbone_freeze_norm=False,
                  hidden_dim=256,
                  num_queries=300,
-                 num_decoder_layers=6,
+                 num_decoder_layers=3,
                  nhead=8,
                  dim_feedforward=1024,
+                 expansion=0.5,
                  dropout=0.0,
                  num_denoising=100,
                  num_decoder_points=4,
@@ -905,7 +888,10 @@ class RTDETRModel(nn.Module):
         self.num_queries = num_queries
 
         # 1. Backbone
-        self.backbone = ResNet18Backbone(pretrained=True)
+        self.backbone = PResNet(
+            depth=backbone_depth, variant=backbone_variant, return_idx=[1, 2, 3],
+            pretrained=backbone_pretrained, freeze_norm=backbone_freeze_norm,
+        )
 
         # 2. Hybrid Encoder
         self.encoder = HybridEncoder(
@@ -914,6 +900,7 @@ class RTDETRModel(nn.Module):
             hidden_dim=hidden_dim,
             nhead=nhead,
             dim_feedforward=dim_feedforward,
+            expansion=expansion,
             dropout=dropout,
         )
 

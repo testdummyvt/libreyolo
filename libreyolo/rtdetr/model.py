@@ -18,6 +18,33 @@ from ..common.utils import preprocess_image
 from .nn import RTDETRModel
 from .utils import postprocess
 
+# Model configs
+RTDETR_MODELS = {
+    "r18": {
+        "backbone_depth": 18,
+        "backbone_variant": "d",
+        "backbone_pretrained": True,
+        "backbone_freeze_norm": False,
+    },
+    "r34": {
+        "backbone_depth": 34,
+        "backbone_variant": "d",
+        "backbone_pretrained": True,
+        "backbone_freeze_norm": False,
+    },
+    "r50": {
+        "backbone_depth": 50,
+        "backbone_variant": "d",
+        "backbone_pretrained": True,
+        "backbone_freeze_norm": False,
+    },
+    "r101": {
+        "backbone_depth": 101,
+        "backbone_variant": "d",
+        "backbone_pretrained": True,
+        "backbone_freeze_norm": False,
+    },
+}
 
 class LIBREYOLORTDETR(LibreYOLOBase):
     """
@@ -73,7 +100,7 @@ class LIBREYOLORTDETR(LibreYOLOBase):
             num_classes=self.nb_classes,
             hidden_dim=256,
             num_queries=300,
-            num_decoder_layers=6,
+            num_decoder_layers=3,
             nhead=8,
             dim_feedforward=1024,
             num_denoising=100,
