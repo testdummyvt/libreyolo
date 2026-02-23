@@ -874,6 +874,8 @@ class RTDETRModel(nn.Module):
                  num_decoder_layers=3,
                  nhead=8,
                  dim_feedforward=1024,
+                 decoder_hidden_dim=None,
+                 decoder_dim_feedforward=None,
                  expansion=0.5,
                  dropout=0.0,
                  num_denoising=100,
@@ -886,6 +888,9 @@ class RTDETRModel(nn.Module):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.num_queries = num_queries
+
+        decoder_hidden_dim = decoder_hidden_dim or hidden_dim
+        decoder_dim_feedforward = decoder_dim_feedforward or dim_feedforward
 
         # 1. Backbone
         self.backbone = PResNet(
@@ -909,7 +914,7 @@ class RTDETRModel(nn.Module):
         encoder_out_channels = [hidden_dim] * len(self.backbone.out_channels)
         self.decoder = RTDETRTransformer(
             num_classes=num_classes,
-            hidden_dim=hidden_dim,
+            hidden_dim=decoder_hidden_dim,
             num_queries=num_queries,
             feat_channels=encoder_out_channels,
             feat_strides=feat_strides,
@@ -917,7 +922,7 @@ class RTDETRModel(nn.Module):
             num_decoder_points=num_decoder_points,
             nhead=nhead,
             num_decoder_layers=num_decoder_layers,
-            dim_feedforward=dim_feedforward,
+            dim_feedforward=decoder_dim_feedforward,
             dropout=dropout,
             num_denoising=num_denoising,
             eval_spatial_size=eval_spatial_size,

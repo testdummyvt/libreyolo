@@ -73,6 +73,8 @@ RTDETR_MODELS = {
         "backbone_freeze_norm": True,
         "hidden_dim": 384,
         "dim_feedforward": 2048,
+        "decoder_hidden_dim": 256,
+        "decoder_dim_feedforward": 1024,
         "expansion": 1.0,
         "num_decoder_layers": 6,
         "num_denoising": 100,
