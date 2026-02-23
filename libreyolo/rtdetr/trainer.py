@@ -100,24 +100,25 @@ class RTDETRTrainer:
         return device
 
     def _setup_optimizer(self) -> torch.optim.Optimizer:
-        """Setup AdamW optimizer with regex-based parameter group matching.
+        """Setup optimizer with regex-based parameter group matching.
 
         Parameter groups (matched in order, first match wins):
-          1. backbone + norm      -> lr=0.00001, weight_decay=0
-          2. backbone + non-norm  -> lr=0.00001
+          1. backbone + norm      -> lr=config.lr_backbone, weight_decay=0
+          2. backbone + non-norm  -> lr=config.lr_backbone
           3. encoder/decoder + norm/bias -> weight_decay=0
           4. everything else      -> default lr and weight_decay
         """
-        base_lr = 0.0001
-        base_wd = 0.0001
-        betas = (0.9, 0.999)
+        base_lr = self.config.lr0
+        base_wd = self.config.weight_decay
+        betas = self.config.betas
+        lr_bb = self.config.lr_backbone
 
         # Define param group rules: (regex_pattern, overrides)
         # Note: backbone (timm ResNet18) uses 'bn' for BatchNorm layers,
         # while encoder/decoder use 'norm' (LayerNorm/BatchNorm via ConvNormLayer).
         group_rules = [
-            (re.compile(r'^(?=.*backbone)(?=.*(?:norm|bn)).*$'),  {"lr": 0.00001, "weight_decay": 0.0}),
-            (re.compile(r'^(?=.*backbone)(?!.*(?:norm|bn)).*$'),  {"lr": 0.00001}),
+            (re.compile(r'^(?=.*backbone)(?=.*(?:norm|bn)).*$'),  {"lr": lr_bb, "weight_decay": 0.0}),
+            (re.compile(r'^(?=.*backbone)(?!.*(?:norm|bn)).*$'),  {"lr": lr_bb}),
             (re.compile(r'^(?=.*(?:encoder|decoder))(?=.*(?:norm|bias)).*$'), {"weight_decay": 0.0}),
         ]
 
@@ -149,7 +150,15 @@ class RTDETRTrainer:
             group["lr_ratio"] = group["lr"] / base_lr
             opt_groups.append(group)
 
-        optimizer = torch.optim.AdamW(opt_groups, lr=base_lr, betas=betas, weight_decay=base_wd)
+        if self.config.optimizer == "adamw":
+            optimizer = torch.optim.AdamW(opt_groups, lr=base_lr, betas=betas, weight_decay=base_wd)
+        elif self.config.optimizer == "adam":
+            optimizer = torch.optim.Adam(opt_groups, lr=base_lr, betas=betas, weight_decay=base_wd)
+        elif self.config.optimizer == "sgd":
+            optimizer = torch.optim.SGD(opt_groups, lr=base_lr, momentum=self.config.momentum, weight_decay=base_wd, nesterov=self.config.nesterov)
+        else:
+            raise ValueError(f"Unsupported optimizer: {self.config.optimizer}")
+            
         return optimizer
 
     def _setup_scheduler(self, iters_per_epoch: int):

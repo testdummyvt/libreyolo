@@ -34,8 +34,10 @@ class RTDETRTrainConfig:
     # Optimizer settings
     optimizer: str = "adamw"  # "sgd", "adam", "adamw"
     lr0: float = 0.0001  # Base learning rate usually lower for DETR
+    lr_backbone: float = 0.00001  # Backbone learning rate
     momentum: float = 0.9  
     weight_decay: float = 0.0001
+    betas: Tuple[float, float] = (0.9, 0.999)
     nesterov: bool = False
 
     # Learning rate schedule 
@@ -106,6 +108,8 @@ class RTDETRTrainConfig:
             self.mosaic_scale = tuple(self.mosaic_scale)
         if isinstance(self.mixup_scale, list):
             self.mixup_scale = tuple(self.mixup_scale)
+        if isinstance(self.betas, list):
+            self.betas = tuple(self.betas)
 
     @classmethod
     def from_yaml(cls, path: Union[str, Path]) -> "RTDETRTrainConfig":
