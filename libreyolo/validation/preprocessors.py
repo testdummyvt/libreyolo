@@ -239,6 +239,70 @@ class RFDETRValPreprocessor(BaseValPreprocessor):
         return resized_img, padded_targets
 
 
+class RTDETRValPreprocessor(BaseValPreprocessor):
+    """
+    RT-DETR validation preprocessor.
+
+    Uses simple resize (no letterbox) and 0-1 normalization only.
+    RT-DETR (Baidu V1) does NOT use ImageNet mean/std normalization —
+    it expects input in [0, 1] range, matching the inference path in
+    common.utils.preprocess_image.
+    """
+
+    @property
+    def normalize(self) -> bool:
+        return True  # We normalize to 0-1
+
+    @property
+    def custom_normalization(self) -> bool:
+        return False
+
+    def __call__(
+        self, img: np.ndarray, targets: np.ndarray, input_size: Tuple[int, int]
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        orig_h, orig_w = img.shape[:2]
+        target_h, target_w = input_size
+
+        # Simple resize (no letterbox)
+        resized_img = cv2.resize(img, (target_w, target_h), interpolation=cv2.INTER_LINEAR)
+
+        # Convert BGR to RGB
+        resized_img = resized_img[:, :, ::-1]
+
+        # Convert to float and normalize to [0, 1] — NO ImageNet mean/std
+        resized_img = resized_img.astype(np.float32) / 255.0
+
+        # Convert to CHW format
+        resized_img = resized_img.transpose(2, 0, 1)
+        resized_img = np.ascontiguousarray(resized_img, dtype=np.float32)
+
+        # Process targets
+        # Targets arrive pre-scaled by letterbox r = min(target_h/real_h, target_w/real_w)
+        # from the dataset's _load_label / _load_anno_from_id. We need to undo that
+        # and apply simple resize scaling: coord * (target_dim / original_dim).
+        # Since the image was also pre-resized by the same r, orig_h/orig_w here are
+        # the letterbox-resized dims. The combined math works out:
+        #   coord_orig * r * (target_dim / (orig_dim * r)) = coord_orig * target_dim / orig_dim
+        padded_targets = np.zeros((self.max_labels, 5), dtype=np.float32)
+        if len(targets) > 0:
+            targets = np.array(targets).copy()
+            n = min(len(targets), self.max_labels)
+
+            # Simple resize scaling
+            scale_x = target_w / orig_w
+            scale_y = target_h / orig_h
+
+            # Scale bounding boxes
+            targets[:n, 0] *= scale_x  # x1
+            targets[:n, 1] *= scale_y  # y1
+            targets[:n, 2] *= scale_x  # x2
+            targets[:n, 3] *= scale_y  # y2
+
+            padded_targets[:n] = targets[:n]
+
+        return resized_img, padded_targets
+
+
 class V9ValPreprocessor(BaseValPreprocessor):
     """
     YOLOv9 validation preprocessor.

@@ -18,31 +18,64 @@ from ..common.utils import preprocess_image
 from .nn import RTDETRModel
 from .utils import postprocess
 
-# Model configs
+# Model configs — derived from official RT-DETR YAML configs:
+# https://github.com/lyuwenyu/RT-DETR/tree/main/rtdetr_pytorch/configs/rtdetr
 RTDETR_MODELS = {
     "r18": {
         "backbone_depth": 18,
         "backbone_variant": "d",
         "backbone_pretrained": True,
         "backbone_freeze_norm": False,
+        "hidden_dim": 256,
+        "dim_feedforward": 1024,
+        "expansion": 0.5,
+        "num_decoder_layers": 3,
+        "num_denoising": 100,
     },
     "r34": {
         "backbone_depth": 34,
         "backbone_variant": "d",
         "backbone_pretrained": True,
         "backbone_freeze_norm": False,
+        "hidden_dim": 256,
+        "dim_feedforward": 1024,
+        "expansion": 0.5,
+        "num_decoder_layers": 4,
+        "num_denoising": 100,
     },
     "r50": {
         "backbone_depth": 50,
         "backbone_variant": "d",
         "backbone_pretrained": True,
-        "backbone_freeze_norm": False,
+        "backbone_freeze_norm": True,
+        "hidden_dim": 256,
+        "dim_feedforward": 1024,
+        "expansion": 1.0,
+        "num_decoder_layers": 6,
+        "num_denoising": 100,
+    },
+    "r50m": {
+        "backbone_depth": 50,
+        "backbone_variant": "d",
+        "backbone_pretrained": True,
+        "backbone_freeze_norm": True,
+        "hidden_dim": 256,
+        "dim_feedforward": 1024,
+        "expansion": 0.5,
+        "num_decoder_layers": 6,
+        "num_denoising": 100,
+        "eval_idx": 2,
     },
     "r101": {
         "backbone_depth": 101,
         "backbone_variant": "d",
         "backbone_pretrained": True,
-        "backbone_freeze_norm": False,
+        "backbone_freeze_norm": True,
+        "hidden_dim": 384,
+        "dim_feedforward": 2048,
+        "expansion": 1.0,
+        "num_decoder_layers": 6,
+        "num_denoising": 100,
     },
 }
 
@@ -82,7 +115,7 @@ class LIBREYOLORTDETR(LibreYOLOBase):
     def _get_valid_sizes(self) -> List[str]:
         # Commonly RT-DETR uses ResNet18/34/50/101 or HGNet as backbones.
         # We define a few standard codes here.
-        return ["r18"]
+        return list(RTDETR_MODELS.keys())
 
     def _get_model_name(self) -> str:
         return "RTDETR"
@@ -91,21 +124,18 @@ class LIBREYOLORTDETR(LibreYOLOBase):
         return 640
 
     def _get_val_preprocessor(self, img_size: int = 640) -> Any:
-        from ..validation.preprocessors import RFDETRValPreprocessor
-        # RTDETR shares input characteristics with RFDETR
-        return RFDETRValPreprocessor(img_size=img_size)
+        from ..validation.preprocessors import RTDETRValPreprocessor
+        return RTDETRValPreprocessor(img_size=img_size)
 
     def _init_model(self) -> nn.Module:
+        cfg = RTDETR_MODELS[self.size]
         return RTDETRModel(
             num_classes=self.nb_classes,
-            hidden_dim=256,
             num_queries=300,
-            num_decoder_layers=3,
             nhead=8,
-            dim_feedforward=1024,
-            num_denoising=100,
             num_decoder_points=4,
             aux_loss=True,
+            **cfg,
         )
 
     def _get_available_layers(self) -> Dict[str, nn.Module]:

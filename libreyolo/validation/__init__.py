@@ -27,6 +27,7 @@ from .preprocessors import (
     StandardValPreprocessor,
     YOLOXValPreprocessor,
     RFDETRValPreprocessor,
+    RTDETRValPreprocessor,
     V9ValPreprocessor,
 )
 from .utils import (
@@ -49,6 +50,7 @@ __all__ = [
     "StandardValPreprocessor",
     "YOLOXValPreprocessor",
     "RFDETRValPreprocessor",
+    "RTDETRValPreprocessor",
     "V9ValPreprocessor",
     # Metrics
     "DetMetrics",
