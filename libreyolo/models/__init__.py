@@ -238,7 +238,12 @@ def LIBREYOLO(
 
     # --- Ensure RF-DETR is registered if its keys are present ---
     keys_lower = [k.lower() for k in weights_dict]
-    if any("detr" in k or "dinov2" in k or "query_embed" in k for k in keys_lower):
+    if any(
+        "detr" in k or "dinov2" in k or "transformer" in k
+        or ("encoder" in k and "decoder" in k) or "query_embed" in k
+        or "class_embed" in k or "bbox_embed" in k
+        for k in keys_lower
+    ):
         try:
             _ensure_rfdetr()
         except ModuleNotFoundError:
