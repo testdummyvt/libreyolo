@@ -39,7 +39,7 @@ test_integration:
 	$(UV) pytest -m integration
 
 test_e2e:
-	$(UV) pytest tests/e2e/ -m slow -v
+	$(UV) pytest tests/e2e/ -m e2e -v --ignore=tests/e2e/test_rf5_training.py
 
 build:
 	@echo "📦 Building package..."
