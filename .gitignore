@@ -42,6 +42,7 @@ CLAUDE.local.md
 .coverage
 htmlcov/
 tests/e2e/rf5_results/
+tests/output/
 
 # OS
 .DS_Store
