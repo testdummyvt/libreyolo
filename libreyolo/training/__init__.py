@@ -5,10 +5,6 @@ Shared training infrastructure (EMA, schedulers, augmentation primitives).
 Model-specific trainers live in their respective models/ subdirectories.
 """
 
-# YOLOX trainer/config — re-exported for backward compatibility
-from ..models.yolox.config import YOLOXTrainConfig, get_config, YOLOX_CONFIGS
-from ..models.yolox.trainer import YOLOXTrainer
-
 # Shared components
 from .augment import (
     TrainTransform,
@@ -25,12 +21,6 @@ from .ema import ModelEMA
 from ..data.dataset import YOLODataset, COCODataset, create_dataloader, load_data_config
 
 __all__ = [
-    # YOLOX Config
-    "YOLOXTrainConfig",
-    "get_config",
-    "YOLOX_CONFIGS",
-    # YOLOX Trainer
-    "YOLOXTrainer",
     # Dataset
     "YOLODataset",
     "COCODataset",

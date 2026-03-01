@@ -171,23 +171,3 @@ YOLOX_CONFIGS = {
     "l": YOLOXTrainConfig(size="l", imgsz=640),
     "x": YOLOXTrainConfig(size="x", imgsz=640),
 }
-
-
-def get_config(size: str = "s", **kwargs) -> YOLOXTrainConfig:
-    """
-    Get a preset configuration with optional overrides.
-
-    Args:
-        size: Model size ("nano", "tiny", "s", "m", "l", "x")
-        **kwargs: Override any configuration parameter
-
-    Returns:
-        YOLOXTrainConfig instance
-    """
-    if size not in YOLOX_CONFIGS:
-        raise ValueError(f"Unknown size '{size}'. Available: {list(YOLOX_CONFIGS.keys())}")
-
-    config = YOLOX_CONFIGS[size]
-    if kwargs:
-        config = config.update(**kwargs)
-    return config
