@@ -98,20 +98,9 @@ class LibreYOLOBase(ABC):
         """Postprocess model output to detections."""
         pass
 
-    # =========================================================================
-    # OVERRIDABLE ATTRIBUTES / METHODS - Subclasses may override
-    # =========================================================================
-
-    # Validation preprocessor class — override in subclasses.
-    # Default uses simple resize + 0-1 normalization (StandardValPreprocessor).
-    val_preprocessor_class = None  # Set lazily to avoid circular imports
-
     def _get_val_preprocessor(self, img_size: int = None):
         """
         Return the validation preprocessor for this model.
-
-        Uses val_preprocessor_class attribute. Subclasses override the
-        class attribute instead of this method.
 
         Args:
             img_size: Target image size. Defaults to model's native input size.
@@ -121,11 +110,7 @@ class LibreYOLOBase(ABC):
         """
         if img_size is None:
             img_size = self._get_input_size()
-        cls = self.val_preprocessor_class
-        if cls is None:
-            from libreyolo.validation.preprocessors import StandardValPreprocessor
-            cls = StandardValPreprocessor
-        return cls(img_size=(img_size, img_size))
+        return self.val_preprocessor_class(img_size=(img_size, img_size))
 
     # =========================================================================
     # SHARED IMPLEMENTATION
@@ -137,6 +122,7 @@ class LibreYOLOBase(ABC):
         size: str,
         nb_classes: int = 80,
         device: str = "auto",
+        val_preprocessor_class=None,
         **kwargs,
     ):
         """
@@ -148,8 +134,15 @@ class LibreYOLOBase(ABC):
             size: Model size variant.
             nb_classes: Number of classes (default: 80 for COCO).
             device: Device for inference ("auto", "cuda", "mps", "cpu").
+            val_preprocessor_class: Preprocessor class for validation.
+                Defaults to StandardValPreprocessor if not provided.
             **kwargs: Additional model-specific arguments.
         """
+        # Validation preprocessor
+        if val_preprocessor_class is None:
+            from libreyolo.validation.preprocessors import StandardValPreprocessor
+            val_preprocessor_class = StandardValPreprocessor
+        self.val_preprocessor_class = val_preprocessor_class
         # Validate size
         valid_sizes = self._get_valid_sizes()
         if size not in valid_sizes:

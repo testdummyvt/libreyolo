@@ -40,8 +40,6 @@ class LIBREYOLO9(LibreYOLOBase):
         >>> detections = model(image=large_image_path, save=True, tiling=True)
     """
 
-    val_preprocessor_class = YOLO9ValPreprocessor
-
     # =========================================================================
     # REGISTRY CLASSMETHODS — used by LIBREYOLO() factory
     # =========================================================================
@@ -107,6 +105,7 @@ class LIBREYOLO9(LibreYOLOBase):
             size=size,
             nb_classes=nb_classes,
             device=device,
+            val_preprocessor_class=YOLO9ValPreprocessor,
             **kwargs,
         )
 

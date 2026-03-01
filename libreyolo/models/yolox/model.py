@@ -45,8 +45,6 @@ class LIBREYOLOX(LibreYOLOBase):
             >>> results = model.train(data="coco128.yaml", epochs=100)
     """
 
-    val_preprocessor_class = YOLOXValPreprocessor
-
     # =========================================================================
     # REGISTRY CLASSMETHODS — used by LIBREYOLO() factory
     # =========================================================================
@@ -103,6 +101,7 @@ class LIBREYOLOX(LibreYOLOBase):
             size=size,
             nb_classes=nb_classes,
             device=device,
+            val_preprocessor_class=YOLOXValPreprocessor,
             **kwargs,
         )
 
