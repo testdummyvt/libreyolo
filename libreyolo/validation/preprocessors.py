@@ -239,7 +239,7 @@ class RFDETRValPreprocessor(BaseValPreprocessor):
         return resized_img, padded_targets
 
 
-class V9ValPreprocessor(BaseValPreprocessor):
+class YOLO9ValPreprocessor(BaseValPreprocessor):
     """
     YOLOv9 validation preprocessor.
 

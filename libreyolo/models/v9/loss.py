@@ -537,10 +537,10 @@ class BoxMatcher:
 
 
 # =============================================================================
-# YOLOv9Loss - Main Loss Class
+# YOLO9Loss - Main Loss Class
 # =============================================================================
 
-class YOLOv9Loss:
+class YOLO9Loss:
     """
     Combined loss for YOLOv9 training (single head, no auxiliary).
 

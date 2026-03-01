@@ -3,7 +3,7 @@ YOLOv9 Trainer for LibreYOLO.
 
 Provides a training loop adapted from YOLOX trainer with v9-specific changes:
 - LinearLR scheduler with warmup (v9 default)
-- V9TrainTransform for normalized xyxy format
+- YOLO9TrainTransform for normalized xyxy format
 - Loss integrated into model forward()
 """
 
@@ -18,8 +18,8 @@ import torch.nn as nn
 from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm
 
-from .config import V9TrainConfig
-from .transforms import V9TrainTransform, V9MosaicMixupDataset
+from .config import YOLO9TrainConfig
+from .transforms import YOLO9TrainTransform, YOLO9MosaicMixupDataset
 from ...training.ema import ModelEMA
 from ...data.dataset import YOLODataset, COCODataset, create_dataloader
 from ...data import load_data_config
@@ -110,7 +110,7 @@ class CosineAnnealingScheduler:
         return lr
 
 
-class V9Trainer:
+class YOLO9Trainer:
     """
     YOLOv9 Trainer.
 
@@ -126,7 +126,7 @@ class V9Trainer:
     def __init__(
         self,
         model: nn.Module,
-        config: V9TrainConfig,
+        config: YOLO9TrainConfig,
         wrapper_model: Optional[Any] = None,
     ):
         """
@@ -268,7 +268,7 @@ class V9Trainer:
         img_size = self.config.input_size
 
         # Create preprocessing transform (v9 format: normalized xyxy)
-        preproc = V9TrainTransform(
+        preproc = YOLO9TrainTransform(
             max_labels=100,
             flip_prob=self.config.flip_prob,
             hsv_prob=self.config.hsv_prob,
@@ -345,7 +345,7 @@ class V9Trainer:
             raise ValueError("Either 'data' or 'data_dir' must be specified in config")
 
         # Wrap with mosaic/mixup augmentation (v9 version)
-        train_dataset = V9MosaicMixupDataset(
+        train_dataset = YOLO9MosaicMixupDataset(
             dataset=train_dataset,
             img_size=img_size,
             mosaic=True,

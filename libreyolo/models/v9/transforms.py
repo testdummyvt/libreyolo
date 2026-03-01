@@ -40,7 +40,7 @@ def preproc(img, input_size, swap=(2, 0, 1)):
     ).astype(np.uint8)
     padded_img[: int(img.shape[0] * r), : int(img.shape[1] * r)] = resized_img
 
-    # Convert BGR to RGB (match V9ValPreprocessor and pretrained weights)
+    # Convert BGR to RGB (match YOLO9ValPreprocessor and pretrained weights)
     padded_img = padded_img[:, :, ::-1]
 
     padded_img = padded_img.transpose(swap)
@@ -57,7 +57,7 @@ def mirror(image, boxes, prob=0.5):
     return image, boxes
 
 
-class V9TrainTransform:
+class YOLO9TrainTransform:
     """
     Transform for YOLOv9 training data.
 
@@ -156,7 +156,7 @@ class V9TrainTransform:
         return image_t, padded_labels
 
 
-class V9ValTransform:
+class YOLO9ValTransform:
     """Transform for YOLOv9 validation data."""
 
     def __init__(self, swap=(2, 0, 1)):
@@ -179,7 +179,7 @@ class V9ValTransform:
         return img, np.zeros((1, 5))
 
 
-class V9MosaicMixupDataset:
+class YOLO9MosaicMixupDataset:
     """
     Dataset wrapper that applies Mosaic and Mixup augmentation for YOLOv9.
 
@@ -202,13 +202,13 @@ class V9MosaicMixupDataset:
         mixup_prob=0.0,
     ):
         """
-        Initialize V9MosaicMixupDataset.
+        Initialize YOLO9MosaicMixupDataset.
 
         Args:
             dataset: Base dataset with pull_item method
             img_size: Target image size (height, width)
             mosaic: Enable mosaic augmentation
-            preproc: Preprocessing transform (default: V9TrainTransform)
+            preproc: Preprocessing transform (default: YOLO9TrainTransform)
             degrees: Rotation degrees (default 0 for v9)
             translate: Translation factor
             mosaic_scale: Scale range for mosaic
@@ -220,7 +220,7 @@ class V9MosaicMixupDataset:
         """
         self.dataset = dataset
         self.img_size = img_size
-        self.preproc = preproc or V9TrainTransform()
+        self.preproc = preproc or YOLO9TrainTransform()
         self.degrees = degrees
         self.translate = translate
         self.scale = mosaic_scale

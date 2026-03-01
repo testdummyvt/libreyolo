@@ -11,7 +11,7 @@ import yaml
 
 
 @dataclass
-class V9TrainConfig:
+class YOLO9TrainConfig:
     """
     Configuration for YOLOv9 training.
 
@@ -121,7 +121,7 @@ class V9TrainConfig:
             self.mixup_scale = tuple(self.mixup_scale)
 
     @classmethod
-    def from_yaml(cls, path: Union[str, Path]) -> "V9TrainConfig":
+    def from_yaml(cls, path: Union[str, Path]) -> "YOLO9TrainConfig":
         """Load configuration from YAML file."""
         with open(path, "r") as f:
             data = yaml.safe_load(f)
@@ -148,11 +148,11 @@ class V9TrainConfig:
         """Convert to dictionary."""
         return asdict(self)
 
-    def update(self, **kwargs) -> "V9TrainConfig":
+    def update(self, **kwargs) -> "YOLO9TrainConfig":
         """Create a new config with updated values."""
         data = asdict(self)
         data.update(kwargs)
-        return V9TrainConfig(**data)
+        return YOLO9TrainConfig(**data)
 
     @property
     def input_size(self) -> Tuple[int, int]:
@@ -166,7 +166,7 @@ class V9TrainConfig:
         return self.lr0 * self.batch / 64
 
     def __repr__(self) -> str:
-        lines = ["V9TrainConfig("]
+        lines = ["YOLO9TrainConfig("]
         for key, value in asdict(self).items():
             lines.append(f"  {key}={value!r},")
         lines.append(")")
@@ -174,29 +174,9 @@ class V9TrainConfig:
 
 
 # Preset configurations for different model sizes
-V9_CONFIGS = {
-    "t": V9TrainConfig(size="t", imgsz=640),
-    "s": V9TrainConfig(size="s", imgsz=640),
-    "m": V9TrainConfig(size="m", imgsz=640),
-    "c": V9TrainConfig(size="c", imgsz=640),
+YOLO9_CONFIGS = {
+    "t": YOLO9TrainConfig(size="t", imgsz=640),
+    "s": YOLO9TrainConfig(size="s", imgsz=640),
+    "m": YOLO9TrainConfig(size="m", imgsz=640),
+    "c": YOLO9TrainConfig(size="c", imgsz=640),
 }
-
-
-def get_v9_config(size: str = "c", **kwargs) -> V9TrainConfig:
-    """
-    Get a preset V9 configuration with optional overrides.
-
-    Args:
-        size: Model size ("t", "s", "m", "c")
-        **kwargs: Override any configuration parameter
-
-    Returns:
-        V9TrainConfig instance
-    """
-    if size not in V9_CONFIGS:
-        raise ValueError(f"Unknown size '{size}'. Available: {list(V9_CONFIGS.keys())}")
-
-    config = V9_CONFIGS[size]
-    if kwargs:
-        config = config.update(**kwargs)
-    return config
