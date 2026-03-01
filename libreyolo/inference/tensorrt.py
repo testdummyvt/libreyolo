@@ -25,6 +25,18 @@ from ..models.yolox.utils import preprocess_image as preprocess_yolox
 _IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32).reshape(3, 1, 1)
 _IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32).reshape(3, 1, 1)
 
+_FAMILY_ALIASES = {
+    "LIBREYOLOX": "yolox",
+    "LIBREYOLO9": "yolo9",
+    "libreyolo9": "yolo9",
+    "LIBREYOLORFDETR": "rfdetr",
+    "v9": "yolo9",
+}
+
+
+def _normalize_family(raw: str) -> str:
+    return _FAMILY_ALIASES.get(raw, raw.lower())
+
 
 def preprocess_rfdetr(image, input_size: int, **_kwargs):
     """Preprocess image for RF-DETR TensorRT inference.
@@ -108,7 +120,8 @@ class TensorRTBackend:
 
         # Priority: explicit arg > sidecar > default (80)
         self.nb_classes = nb_classes if nb_classes is not None else self._metadata.get("nb_classes", 80)
-        self.model_family = self._metadata.get("model_family")
+        raw_family = self._metadata.get("model_family")
+        self.model_family = _normalize_family(raw_family) if raw_family is not None else None
         self._sidecar_size = self._metadata.get("model_size")
 
         # Build names dict: sidecar names when available, else COCO / generic
@@ -194,18 +207,17 @@ class TensorRTBackend:
 
     def _detect_model_type(self):
         """Detect model type (YOLOX vs YOLOv9 vs RF-DETR) from sidecar metadata or output shapes."""
-        # Use sidecar metadata when available
+        # Use sidecar metadata when available (already normalized to lowercase)
         if self.model_family is not None:
-            family = self.model_family.upper()
-            if "YOLOX" in family:
+            if self.model_family == "yolox":
                 self.model_type = "yolox"
                 self.main_output = None
                 return
-            if "RFDETR" in family or "RF-DETR" in family or "DETR" in family:
+            if self.model_family == "rfdetr":
                 self.model_type = "rfdetr"
                 self.main_output = None
                 return
-            if "9" in family or "YOLO9" in family:
+            if self.model_family == "yolo9":
                 self.model_type = "yolov9"
                 self.main_output = "output" if "output" in self.output_shapes else (
                     self.output_names[0] if self.output_names else None
@@ -790,12 +802,12 @@ class TensorRTBackend:
     def _get_model_name(self) -> str:
         """Return model name for compatibility."""
         if self.model_type == "yolov9":
-            return "LIBREYOLO9"
+            return "yolo9"
         elif self.model_type == "yolox":
-            return "LIBREYOLOX"
+            return "yolox"
         elif self.model_type == "rfdetr":
-            return "LIBREYOLORFDETR"
-        return "LIBREYOLO"
+            return "rfdetr"
+        return "libreyolo"
 
     def _get_input_size(self) -> int:
         """Return model input size."""

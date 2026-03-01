@@ -19,6 +19,18 @@ from ..models.yolox.utils import preprocess_image as yolox_preprocess_image
 
 logger = logging.getLogger(__name__)
 
+_FAMILY_ALIASES = {
+    "LIBREYOLOX": "yolox",
+    "LIBREYOLO9": "yolo9",
+    "libreyolo9": "yolo9",
+    "LIBREYOLORFDETR": "rfdetr",
+    "v9": "yolo9",
+}
+
+
+def _normalize_family(raw: str) -> str:
+    return _FAMILY_ALIASES.get(raw, raw.lower())
+
 
 def _nms(boxes: np.ndarray, scores: np.ndarray, iou_threshold: float = 0.45) -> list:
     """Numpy-based Non-Maximum Suppression."""
@@ -133,7 +145,7 @@ class OnnxBackend:
             meta = {p.key: p.value for p in model_proto.metadata_props}
 
             if "model_family" in meta:
-                self.model_family = meta["model_family"]
+                self.model_family = _normalize_family(meta["model_family"])
 
             if "names" in meta:
                 import json
@@ -255,13 +267,13 @@ class OnnxBackend:
         effective_imgsz = imgsz if imgsz is not None else self.imgsz
 
         # Use model-family-specific preprocessing
-        if self.model_family == "LIBREYOLOX":
+        if self.model_family == "yolox":
             # YOLOX: letterbox + 0-255 range + BGR
             input_tensor, original_img, original_size, ratio = yolox_preprocess_image(
                 image, input_size=effective_imgsz, color_format=color_format
             )
             self._yolox_ratio = ratio
-        elif self.model_family == "LIBREYOLORFDETR":
+        elif self.model_family == "rfdetr":
             # RF-DETR: direct resize + ImageNet normalization
             input_tensor, original_img, original_size = self._preprocess_rfdetr(
                 image, effective_imgsz, color_format
@@ -394,9 +406,9 @@ class OnnxBackend:
         """
         orig_w, orig_h = original_size
 
-        if self.model_family == "LIBREYOLOX":
+        if self.model_family == "yolox":
             return self._parse_yolox(all_outputs, effective_imgsz, orig_w, orig_h, conf)
-        elif self.model_family == "LIBREYOLORFDETR":
+        elif self.model_family == "rfdetr":
             return self._parse_rfdetr(all_outputs, orig_w, orig_h, conf)
         else:
             # Default / YOLOv9: single tensor (B, 4+nc, N)

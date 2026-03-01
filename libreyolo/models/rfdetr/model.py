@@ -169,7 +169,7 @@ class LibreYOLORFDETR(BaseModel):
         return ["n", "s", "m", "l"]
 
     def _get_model_name(self) -> str:
-        return "LIBREYOLORFDETR"
+        return "rfdetr"
 
     def _get_input_size(self) -> int:
         return self.resolution

@@ -117,7 +117,7 @@ class LibreYOLOX(BaseModel):
         return ["nano", "tiny", "s", "m", "l", "x"]
 
     def _get_model_name(self) -> str:
-        return "LIBREYOLOX"
+        return "yolox"
 
     def _get_input_size(self) -> int:
         return self.input_size

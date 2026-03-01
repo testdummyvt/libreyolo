@@ -90,7 +90,7 @@ class TestExporterValidation:
 
 class TestOutputPathGeneration:
     def test_auto_path_onnx(self):
-        wrapper = _make_wrapper(model_name="LIBREYOLOX", size="m")
+        wrapper = _make_wrapper(model_name="yolox", size="m")
         exporter = Exporter(wrapper)
         with tempfile.TemporaryDirectory() as tmpdir:
             import os
@@ -98,13 +98,13 @@ class TestOutputPathGeneration:
             try:
                 os.chdir(tmpdir)
                 path = exporter("onnx", simplify=False)
-                assert path == str(Path("weights") / "libreyolox_m.onnx")
+                assert path == str(Path("weights") / "yolox_m.onnx")
                 assert Path(path).exists()
             finally:
                 os.chdir(orig)
 
     def test_auto_path_torchscript(self):
-        wrapper = _make_wrapper(model_name="LIBREYOLO9", size="t")
+        wrapper = _make_wrapper(model_name="yolo9", size="t")
         exporter = Exporter(wrapper)
         with tempfile.TemporaryDirectory() as tmpdir:
             import os
@@ -112,7 +112,7 @@ class TestOutputPathGeneration:
             try:
                 os.chdir(tmpdir)
                 path = exporter("torchscript")
-                assert path == str(Path("weights") / "libreyolo9_t.torchscript")
+                assert path == str(Path("weights") / "yolo9_t.torchscript")
                 assert Path(path).exists()
             finally:
                 os.chdir(orig)
@@ -131,7 +131,7 @@ class TestOnnxMetadata:
     def test_metadata_written(self):
         import onnx
 
-        wrapper = _make_wrapper(nb_classes=4, model_name="LIBREYOLOX", size="s")
+        wrapper = _make_wrapper(nb_classes=4, model_name="yolox", size="s")
         exporter = Exporter(wrapper)
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -141,7 +141,7 @@ class TestOnnxMetadata:
             model_proto = onnx.load(out)
             meta = {p.key: p.value for p in model_proto.metadata_props}
 
-            assert meta["model_family"] == "LIBREYOLOX"
+            assert meta["model_family"] == "yolox"
             assert meta["model_size"] == "s"
             assert meta["nb_classes"] == "4"
             assert meta["dynamic"] == "True"

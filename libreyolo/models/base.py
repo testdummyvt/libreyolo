@@ -28,6 +28,19 @@ from ..utils.general import (
 from ..utils.drawing import draw_boxes, draw_tile_grid
 
 
+_FAMILY_ALIASES = {
+    "LIBREYOLOX": "yolox",
+    "LIBREYOLO9": "yolo9",
+    "libreyolo9": "yolo9",
+    "LIBREYOLORFDETR": "rfdetr",
+    "v9": "yolo9",
+}
+
+
+def _normalize_family(raw: str) -> str:
+    return _FAMILY_ALIASES.get(raw, raw.lower())
+
+
 class BaseModel(ABC):
     """
     Abstract base class for LibreYOLO model wrappers.
@@ -283,17 +296,14 @@ class BaseModel(ABC):
                 state_dict = self._strip_ddp_prefix(state_dict)
 
                 # Reject cross-family loading
-                ckpt_family = loaded.get("model_family")
-                if ckpt_family is not None:
-                    own_family = self._get_model_name().lower()
-                    family_map = {"libreyolo9": "v9", "libreyolox": "yolox", "libreyolorfdetr": "rfdetr"}
-                    own_family_norm = family_map.get(own_family, own_family)
-                    if ckpt_family != own_family_norm:
-                        raise RuntimeError(
-                            f"Checkpoint was trained with model_family='{ckpt_family}' "
-                            f"but is being loaded into '{own_family_norm}'. "
-                            f"Use the correct model class for this checkpoint."
-                        )
+                own_family = self._get_model_name()
+                ckpt_family = _normalize_family(loaded.get("model_family", ""))
+                if ckpt_family and ckpt_family != own_family:
+                    raise RuntimeError(
+                        f"Checkpoint was trained with model_family='{ckpt_family}' "
+                        f"but is being loaded into '{own_family}'. "
+                        f"Use the correct model class for this checkpoint."
+                    )
 
                 # Auto-rebuild model if checkpoint has different nc
                 ckpt_nc = loaded.get("nc")

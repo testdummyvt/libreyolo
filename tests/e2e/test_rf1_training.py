@@ -36,10 +36,10 @@ MODELS = [
     ("libreyoloXl.pt",       "l",    "yolox"),
     ("libreyoloXx.pt",       "x",    "yolox"),
     # YOLOv9
-    ("libreyolo9t.pt",       "t",    "v9"),
-    ("libreyolo9s.pt",       "s",    "v9"),
-    ("libreyolo9m.pt",       "m",    "v9"),
-    ("libreyolo9c.pt",       "c",    "v9"),
+    ("libreyolo9t.pt",       "t",    "yolo9"),
+    ("libreyolo9s.pt",       "s",    "yolo9"),
+    ("libreyolo9m.pt",       "m",    "yolo9"),
+    ("libreyolo9c.pt",       "c",    "yolo9"),
     # RF-DETR
     ("librerfdetrnano.pth",  "n",    "rfdetr"),
     ("librerfdetrsmall.pth", "s",    "rfdetr"),
@@ -229,10 +229,10 @@ RELOAD_MODELS = [
     ("libreyoloXm.pt",       "m",    "yolox"),
     ("libreyoloXl.pt",       "l",    "yolox"),
     ("libreyoloXx.pt",       "x",    "yolox"),
-    ("libreyolo9t.pt",       "t",    "v9"),
-    ("libreyolo9s.pt",       "s",    "v9"),
-    ("libreyolo9m.pt",       "m",    "v9"),
-    ("libreyolo9c.pt",       "c",    "v9"),
+    ("libreyolo9t.pt",       "t",    "yolo9"),
+    ("libreyolo9s.pt",       "s",    "yolo9"),
+    ("libreyolo9m.pt",       "m",    "yolo9"),
+    ("libreyolo9c.pt",       "c",    "yolo9"),
 ]
 RELOAD_IDS = [
     "yolox-nano", "yolox-tiny", "yolox-s", "yolox-m", "yolox-l", "yolox-x",

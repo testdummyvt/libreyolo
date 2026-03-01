@@ -16,6 +16,18 @@ from ..utils.image_loader import ImageLoader
 from ..utils.results import Boxes, Results
 from ..models.yolox.utils import preprocess_image as yolox_preprocess_image
 
+_FAMILY_ALIASES = {
+    "LIBREYOLOX": "yolox",
+    "LIBREYOLO9": "yolo9",
+    "libreyolo9": "yolo9",
+    "LIBREYOLORFDETR": "rfdetr",
+    "v9": "yolo9",
+}
+
+
+def _normalize_family(raw: str) -> str:
+    return _FAMILY_ALIASES.get(raw, raw.lower())
+
 
 def _nms(boxes: np.ndarray, scores: np.ndarray, iou_threshold: float = 0.45) -> list:
     """Numpy-based Non-Maximum Suppression."""
@@ -167,7 +179,8 @@ class NcnnBackend:
         if meta is None:
             meta = {}
 
-        self.model_family = meta.get("model_family")
+        raw_family = meta.get("model_family")
+        self.model_family = _normalize_family(raw_family) if raw_family is not None else None
 
         if "imgsz" in meta:
             self.imgsz = int(meta["imgsz"])
@@ -289,12 +302,12 @@ class NcnnBackend:
         effective_imgsz = imgsz if imgsz is not None else self.imgsz
 
         # Use model-family-specific preprocessing
-        if self.model_family == "LIBREYOLOX":
+        if self.model_family == "yolox":
             input_tensor, original_img, original_size, ratio = yolox_preprocess_image(
                 image, input_size=effective_imgsz, color_format=color_format
             )
             self._yolox_ratio = ratio
-        elif self.model_family == "LIBREYOLORFDETR":
+        elif self.model_family == "rfdetr":
             input_tensor, original_img, original_size = self._preprocess_rfdetr(
                 image, effective_imgsz, color_format
             )
@@ -447,9 +460,9 @@ class NcnnBackend:
         """Parse ncnn outputs into (boxes_xyxy, scores, class_ids) based on model family."""
         orig_w, orig_h = original_size
 
-        if self.model_family == "LIBREYOLOX":
+        if self.model_family == "yolox":
             return self._parse_yolox(all_outputs, effective_imgsz, orig_w, orig_h, conf)
-        elif self.model_family == "LIBREYOLORFDETR":
+        elif self.model_family == "rfdetr":
             return self._parse_rfdetr(all_outputs, orig_w, orig_h, conf)
         else:
             return self._parse_yolov9(all_outputs, effective_imgsz, orig_w, orig_h, conf)

@@ -658,7 +658,7 @@ class YOLO9Trainer:
             # Model metadata for loading fine-tuned models in new sessions
             "nc": self.config.num_classes,
             "size": self.config.size,
-            "model_family": "v9",
+            "model_family": "yolo9",
         }
         if self.wrapper_model is not None:
             checkpoint["names"] = self.wrapper_model.names

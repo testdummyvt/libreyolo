@@ -93,7 +93,7 @@ class TestNCNNOutputPathGeneration:
 
     def test_auto_path_ncnn(self):
         """ncnn export should generate path with _ncnn suffix."""
-        wrapper = _make_wrapper(model_name="LIBREYOLO9", size="t")
+        wrapper = _make_wrapper(model_name="yolo9", size="t")
         exporter = Exporter(wrapper)
 
         # Verify the auto-generated path would include _ncnn
@@ -123,7 +123,7 @@ class TestNCNNMetadataYAML:
 
         metadata = {
             "libreyolo_version": "0.1.5",
-            "model_family": "LIBREYOLO9",
+            "model_family": "yolo9",
             "model_size": "t",
             "nb_classes": 80,
             "names": {"0": "person", "1": "bicycle"},
@@ -142,7 +142,7 @@ class TestNCNNMetadataYAML:
             with open(metadata_path) as f:
                 loaded = yaml.safe_load(f)
 
-            assert loaded["model_family"] == "LIBREYOLO9"
+            assert loaded["model_family"] == "yolo9"
             assert loaded["model_size"] == "t"
             assert loaded["nb_classes"] == 80
             assert loaded["precision"] == "fp32"

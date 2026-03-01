@@ -113,7 +113,7 @@ class LibreYOLO9(BaseModel):
         return ["t", "s", "m", "c"]
 
     def _get_model_name(self) -> str:
-        return "LIBREYOLO9"
+        return "yolo9"
 
     def _get_input_size(self) -> int:
         return 640
