@@ -568,7 +568,7 @@ def run_export_compare_test(
     pt_model = load_model(model_type, size, device=device)
     pt_results = pt_model(sample_image, conf=0.25)
 
-    export_path = str(tmp_path / f"{model_type}_{size}_{format}")
+    export_path = str(tmp_path / f"{model_type}_{size}.{format}")
     exported_path = pt_model.export(
         format=format,
         output_path=export_path,
@@ -604,7 +604,7 @@ def run_consistency_test(
     from libreyolo import LibreYOLO
 
     pt_model = load_model(model_type, size, device=device)
-    export_path = str(tmp_path / f"{model_type}_{size}_{format}")
+    export_path = str(tmp_path / f"{model_type}_{size}.{format}")
     exported_path = pt_model.export(
         format=format, output_path=export_path, **(export_kwargs or {})
     )
@@ -626,7 +626,7 @@ def run_metadata_round_trip_test(
     from libreyolo import LibreYOLO
 
     pt_model = load_model(model_type, size, device=device)
-    export_path = str(tmp_path / f"{model_type}_{size}_{format}")
+    export_path = str(tmp_path / f"{model_type}_{size}.{format}")
     exported_path = pt_model.export(
         format=format, output_path=export_path, **(export_kwargs or {})
     )
