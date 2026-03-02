@@ -1,17 +1,17 @@
-from libreyolo import LIBREYOLORTDETR
+from libreyolo import LIBREYOLO9NMSFree
 
-model = LIBREYOLORTDETR(model_path = None, size="r18")
+model = LIBREYOLO9NMSFree(model_path = None, size="t")
 
 results = model.train(
-    data="coco.yaml",     # path to data.yaml (required)
+    data="/home/testdummy/datasets/hagridv2/data.yaml",     # path to data.yaml (required)
 
     # Training parameters
     epochs=50,              # default: 100
-    batch=24,
+    batch=32,
     imgsz=640,
 
     # Optimizer
-    lr0=0.0001,                # initial learning rate
+    lr0=0.001,                # initial learning rate
     optimizer="AdamW",         # "SGD", "Adam", "AdamW"
 
     # System
@@ -29,8 +29,10 @@ results = model.train(
     patience=50,             # early stopping patience
     resume=False,            # resume from loaded checkpoint
     log_interval = 1,
-    eval_interval = 5
+    eval_interval = 5,
+    save_period = 5
 )
 
 print(f"Best mAP50-95: {results['best_mAP50_95']:.3f}")
 print(f"Best checkpoint: {results['best_checkpoint']}")
+ 

@@ -1,28 +1,37 @@
 """
 Libre YOLO - An open source YOLO library with MIT license.
 """
+
 from importlib.metadata import version, PackageNotFoundError
 
 from .v9.model import LIBREYOLO9
 from .v9_nms_free.model import LIBREYOLO9NMSFree
 from .yolox.model import LIBREYOLOX
 from .rtdetr.model import LIBREYOLORTDETR
+from .dabdetr.model import LIBREYOLODABDETR
 from .factory import LIBREYOLO, create_model
+
+
 def __getattr__(name):
     if name == "LIBREYOLORFDETR":
         import importlib.util
+
         if importlib.util.find_spec("rfdetr") is None:
             raise ModuleNotFoundError(
                 "RF-DETR support requires extra dependencies.\n"
                 "Install with: pip install libreyolo[rfdetr]"
             )
         from .rfdetr.model import LIBREYOLORFDETR
+
         return LIBREYOLORFDETR
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
+
 from .export import Exporter
 from .common.onnx import LIBREYOLOOnnx
 from .common.openvino import LIBREYOLOOpenVINO
 from .common.results import Results, Boxes
+
 # CAM/GradCAM removed
 from .validation import (
     ValidationConfig,
@@ -37,6 +46,7 @@ from .data import (
 )
 
 from pathlib import Path as _Path
+
 SAMPLE_IMAGE = str(_Path(__file__).parent / "assets" / "parkour.jpg")
 
 try:
@@ -53,6 +63,7 @@ __all__ = [
     "LIBREYOLO9NMSFree",
     "LIBREYOLOX",
     "LIBREYOLORTDETR",
+    "LIBREYOLODABDETR",
     "LIBREYOLORFDETR",
     "LIBREYOLOOnnx",
     "LIBREYOLOOpenVINO",
