@@ -1,26 +1,26 @@
-from libreyolo import LIBREYOLORTDETR
+# from libreyolo import LIBREYOLORTDETR
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    import argparse
+#     import argparse
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--model_path", type=str, default="/home/testdummy/Downloads/libre_rtdetr_r18vd_dec3_6x_coco.pth")
-    parser.add_argument("--size", type=str, default="r18")
-    args = parser.parse_args()
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("--model_path", type=str, default="/home/testdummy/Downloads/libre_rtdetr_r18vd_dec3_6x_coco.pth")
+#     parser.add_argument("--size", type=str, default="r18")
+#     args = parser.parse_args()
 
-    model = LIBREYOLORTDETR(args.model_path, size=args.size)
-    results = model.val(
-        data="coco.yaml",
-        batch=16,
-        imgsz=640,
-        conf_thres=0.001,
-        iou_thres=0.6,
-        split="val",
-        save_json=True,
-        verbose=True,
-    )
+#     model = LIBREYOLORTDETR(args.model_path, size=args.size)
+#     results = model.val(
+#         data="coco.yaml",
+#         batch=16,
+#         imgsz=640,
+#         conf_thres=0.001,
+#         iou_thres=0.6,
+#         split="val",
+#         save_json=True,
+#         verbose=True,
+#     )
 
 
 """
@@ -94,24 +94,18 @@ Validation Results
   Speed: 23.6ms/image
 ==================================================
 """
-# results = model.predict(
-#     source="/home/testdummy/Downloads/test/x.jpg",
-#     save=True,
-#     conf=0.4,
-#     iou=0.6,
-# )
 
-# import torch
+from libreyolo import LIBREYOLODABDETR
 
-# model = torch.load("/home/testdummy/Downloads/yolov9_nmsfree.pt")
+model = LIBREYOLODABDETR(
+    model_path="/home/testdummy/projects/code/libreyolo/weights/dab_detr_r50.pt",
+    size="r50", nb_classes = 91
+)
 
-# print(model.keys())
-# # print all model keys and values
-# for key, value in model.items():
-#     if key == "model" or key == "optimizer":
-#         continue
-#     print(key, value)
-
-
-# model["model_family"] = "v9_nms_free"
-# torch.save(model, "/home/testdummy/Downloads/yolov9_nmsfree.pt")
+results = model.predict(
+    source="/home/testdummy/Downloads/test/x.jpg",
+    save=True,
+    conf=0.25,
+    iou=0.45,
+    input_size = 1333,
+)

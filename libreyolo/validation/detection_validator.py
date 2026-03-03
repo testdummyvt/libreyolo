@@ -435,7 +435,8 @@ class DetectionValidator(BaseValidator):
             return
 
         # Check if preprocessor uses letterbox (aspect-preserving) or simple resize
-        uses_letterbox = self.val_preproc is not None and self.val_preproc.uses_letterbox
+        uses_letterbox = self.val_preproc is not None and getattr(self.val_preproc, 'uses_letterbox', False)
+        uses_dab_resize = self.val_preproc is not None and getattr(self.val_preproc, 'uses_dab_resize', False)
 
         for i in range(batch_size):
             pred = preds[i]
@@ -464,7 +465,14 @@ class DetectionValidator(BaseValidator):
                 orig_h, orig_w = img_info[i]
                 img_h, img_w = self._actual_imgsz, self._actual_imgsz
 
-                if uses_letterbox:
+                if uses_dab_resize:
+                    min_size = 800
+                    max_size = max(img_h, img_w)
+                    ratio = min_size / min(orig_h, orig_w)
+                    if ratio * max(orig_h, orig_w) > max_size:
+                        ratio = max_size / max(orig_h, orig_w)
+                    gt_boxes[:, :4] = gt_boxes[:, :4] / ratio
+                elif uses_letterbox:
                     # Letterbox: GT boxes were scaled by r = min(img_h/orig_h, img_w/orig_w)
                     # To convert back: divide by r
                     r = min(img_h / orig_h, img_w / orig_w)

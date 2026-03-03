@@ -355,3 +355,92 @@ class V9ValPreprocessor(BaseValPreprocessor):
             padded_targets[:n] = targets[:n]
 
         return padded_img, padded_targets
+
+
+class DABDETRValPreprocessor(BaseValPreprocessor):
+    """
+    DAB-DETR validation preprocessor.
+
+    Uses aspect-ratio preserving resize (shortest edge to 800, longest edge <= 1333),
+    pads to fixed target size with zeros, and applies ImageNet normalization.
+    """
+
+    # ImageNet normalization constants
+    MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+    STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+
+    @property
+    def normalize(self) -> bool:
+        return False
+
+    @property
+    def custom_normalization(self) -> bool:
+        return True
+
+    @property
+    def uses_dab_resize(self) -> bool:
+        return True
+
+    def __call__(
+        self, img: np.ndarray, targets: np.ndarray, input_size: Tuple[int, int]
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        orig_h, orig_w = img.shape[:2]
+        
+        # input_size should be the max size, e.g., 1333
+        # In validation, typically input_size is a single int passed as (imgsz, imgsz) -> (1333, 1333)
+        target_h, target_w = input_size
+        max_size = max(target_h, target_w)
+        min_size = 800
+
+        # Calculate scale ratio
+        ratio = min_size / min(orig_h, orig_w)
+        if ratio * max(orig_h, orig_w) > max_size:
+            ratio = max_size / max(orig_h, orig_w)
+
+        new_h, new_w = int(orig_h * ratio), int(orig_w * ratio)
+
+        # Resize image
+        resized_img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+
+        # Convert BGR to RGB
+        resized_img = resized_img[:, :, ::-1]
+
+        # Convert to float and normalize to [0, 1]
+        resized_img = resized_img.astype(np.float32) / 255.0
+
+        # Apply ImageNet normalization
+        resized_img = (resized_img - self.MEAN) / self.STD
+
+        # Pad to input_size (bottom and right padding)
+        pad_h = target_h - new_h
+        pad_w = target_w - new_w
+        padded_img = np.pad(
+            resized_img, 
+            ((0, pad_h), (0, pad_w), (0, 0)), 
+            mode='constant', 
+            constant_values=0
+        )
+
+        # Convert to CHW format
+        padded_img = padded_img.transpose(2, 0, 1)
+        padded_img = np.ascontiguousarray(padded_img, dtype=np.float32)
+
+        # Process targets
+        padded_targets = np.zeros((self.max_labels, 5), dtype=np.float32)
+        if len(targets) > 0:
+            targets = np.array(targets).copy()
+            n = min(len(targets), self.max_labels)
+
+            # In the dataset loader, targets are typically pre-scaled by `letterbox_r = min(target_h/orig_h, target_w/orig_w)`
+            # We need to undo that and apply our own `ratio`
+            letterbox_r = min(target_h / orig_h, target_w / orig_w)
+            
+            targets[:n, 0] = targets[:n, 0] / letterbox_r * ratio  # x1
+            targets[:n, 1] = targets[:n, 1] / letterbox_r * ratio  # y1
+            targets[:n, 2] = targets[:n, 2] / letterbox_r * ratio  # x2
+            targets[:n, 3] = targets[:n, 3] / letterbox_r * ratio  # y2
+
+            padded_targets[:n] = targets[:n]
+
+        return padded_img, padded_targets
+
