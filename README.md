@@ -8,7 +8,7 @@ MIT-licensed YOLO implementation supporting inference for YOLOv9 (t, s, m, c), Y
 
 Training support is under development
 
-![LibreYOLO Detection Example](media/parkour_result.jpg)
+![LibreYOLO Detection Example](libreyolo/assets/parkour_result.jpg)
 
 ## Installation
 
@@ -23,7 +23,7 @@ from libreyolo import LibreYOLO
 
 # Auto-detect model version and size
 model = LibreYOLO("LibreYOLOXs.pt")
-results = model(image="https://raw.githubusercontent.com/LibreYOLO/libreyolo/main/media/parkour.jpg", save=True)
+results = model(image="https://raw.githubusercontent.com/LibreYOLO/libreyolo/main/libreyolo/assets/parkour.jpg", save=True)
 
 print(f"Detected {results['num_detections']} objects")
 ```
