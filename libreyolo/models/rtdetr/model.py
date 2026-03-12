@@ -61,7 +61,7 @@ RTDETR_CONFIGS = {
         "backbone_pretrained": False,
         "encoder_hidden_dim": 256,
         "encoder_dim_feedforward": 1024,
-        "encoder_expansion": 1.0,
+        "encoder_expansion": 0.5,
         "decoder_hidden_dim": 256,
         "num_decoder_layers": 6,
         "eval_idx": 2,
